@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsItem
+from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsItemGroup, QPushButton
 from PySide2.QtGui import QColor, QBrush, QPen, QFont, QPainter
 from PySide2.QtCore import Qt, QRectF, QPointF
 import random
@@ -50,12 +50,28 @@ class Board(QGraphicsScene):
         self.setSceneRect(0, 0, 1800, 1000)
         self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
+        self.user_tiles = []
         self.width = 50
         self.height = 80
         self.foreground_item = ForegroundItem(self.width * 10, self.height * 2) # Create an instance of ForegroundItem
-        self.foreground_item.setPos(self.sceneRect().width() / 2 - self.width * 10 / 2, self.sceneRect().height() - self.height * 2)
+        self.foreground_item.setPos(self.sceneRect().width() / 2 - self.width * 10 / 2, int(round((self.sceneRect().height() - self.height * 2)/self.height))*self.height)
         self.addItem(self.foreground_item) # Add the foreground item to the scene
 
+        # Add a button to the top right corner of the QGraphicsView
+        self.button = QPushButton('Draw Tile', view)
+        self.button.setGeometry(1700, 10, 90, 30)  # Set the button position
+        self.button.clicked.connect(self.draw_tile)  # Connect the button to a function that will draw a tile
+
+
+    def draw_tile(self):
+        tile = self.tiles.pop()
+        self.user_tiles.append(tile)
+        print(len(self.user_tiles))
+        tile.setPos(((len(self.user_tiles) - 1) % 10) * self.width, int((len(self.user_tiles) - 1) / 10) * self.height)
+        #self.user_tiles_group.addToGroup(tile)
+        #self.addItem(self.user_tiles_group)
+        #self.addItem(self.foreground_item)
+        self.addItem(tile)
 
     def generate_tiles(self):
         # Generowanie klocków
@@ -65,9 +81,11 @@ class Board(QGraphicsScene):
                 for i in range(2):
                     tile = Tile(colour, numer)
                     tile.setFlag(QGraphicsItem.ItemIsMovable)  # Ustawienie możliwości przesuwania klocka
-                    self.addItem(tile)
+                    #self.addItem(tile)
                     self.tiles.append(tile)
         random.shuffle(self.tiles)
+        for i in range(14):
+            self.draw_tile()
 
     def snap_to_grid(self, pos):
         # Obliczenie pozycji klocka na siatce
