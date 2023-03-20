@@ -59,23 +59,47 @@ class Board(QGraphicsScene):
 
         # Add a button to the top right corner of the QGraphicsView
         self.button = QPushButton('Draw Tile', view)
-        self.button.setGeometry(1700, 10, 90, 30)  # Set the button position
+        self.button.setGeometry(1600, 500, 90, 30)  # Set the button position
         self.button.clicked.connect(self.draw_tile)  # Connect the button to a function that will draw a tile
 
+        # Add a button to the top right corner of the QGraphicsView for sorting tiles by color
+        self.sort_by_color_button = QPushButton('Sort by Color', view)
+        self.sort_by_color_button.setGeometry(1600, 40, 120, 30)  # Set the button position
+        self.sort_by_color_button.clicked.connect(
+            self.sort_tiles_by_color)  # Connect the button to a function that will sort tiles by color
+
+        # Add a button to the top right corner of the QGraphicsView for sorting tiles by number
+        self.sort_by_number_button = QPushButton('Sort by Number', view)
+        self.sort_by_number_button.setGeometry(1600, 70, 120, 30)  # Set the button position
+        self.sort_by_number_button.clicked.connect(
+        self.sort_tiles_by_number)  # Connect the button to a function that will sort tiles by number
+
+    def sort_tiles_by_color(self):
+        colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
+        self.user_tiles = sorted(self.user_tiles, key=lambda tile: colors.index(tile.colour))
+
+        for index, tile in enumerate(self.user_tiles):
+            tile.setPos(self.foreground_item.pos() + QPointF((index % 10) * self.width,
+                                                             int(index / 10) * self.height))
+
+    def sort_tiles_by_number(self):
+        self.user_tiles = sorted(self.user_tiles, key=lambda tile: tile.numer)
+
+        for index, tile in enumerate(self.user_tiles):
+            tile.setPos(self.foreground_item.pos() + QPointF((index % 10) * self.width,
+                                                             int(index / 10) * self.height))
 
     def draw_tile(self):
         tile = self.tiles.pop()
         self.user_tiles.append(tile)
-        print(len(self.user_tiles))
-        tile.setPos(((len(self.user_tiles) - 1) % 10) * self.width, int((len(self.user_tiles) - 1) / 10) * self.height)
-        #self.user_tiles_group.addToGroup(tile)
-        #self.addItem(self.user_tiles_group)
-        #self.addItem(self.foreground_item)
+        # Set the position of the tile relative to the ForegroundItem
+        tile.setPos(self.foreground_item.pos() + QPointF(((len(self.user_tiles) - 1) % 10) * self.width,
+                                                         int((len(self.user_tiles) - 1) / 10) * self.height))
         self.addItem(tile)
 
     def generate_tiles(self):
         # Generowanie klocków
-        colours = [Qt.red, Qt.blue, Qt.yellow, Qt.black]
+        colours = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
         for colour in colours:
             for numer in range(1, 14):
                 for i in range(2):
