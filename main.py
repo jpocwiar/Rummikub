@@ -2,6 +2,7 @@ from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGrap
 from PySide2.QtGui import QColor, QBrush, QPen, QFont, QPainter
 from PySide2.QtCore import Qt, QRectF, QPointF
 import random
+import numpy as np
 
 class Tile(QGraphicsItem):
     def __init__(self, colour, numer):
@@ -51,6 +52,7 @@ class Board(QGraphicsScene):
         self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
         self.user_tiles = []
+        self.board = np.full((15, 40), None, dtype=object)
         self.width = 50
         self.height = 80
         self.foreground_item = ForegroundItem(self.width * 10, self.height * 2) # Create an instance of ForegroundItem
@@ -66,13 +68,47 @@ class Board(QGraphicsScene):
         self.sort_by_color_button = QPushButton('Sort by Color', view)
         self.sort_by_color_button.setGeometry(1600, 40, 120, 30)  # Set the button position
         self.sort_by_color_button.clicked.connect(
-            self.sort_tiles_by_color)  # Connect the button to a function that will sort tiles by color
+        self.sort_tiles_by_color)  # Connect the button to a function that will sort tiles by color
+
+        self.accept_move = QPushButton('Accept move', view)
+        self.accept_move.setGeometry(1600, 540, 120, 30)  # Set the button position
+        self.accept_move.clicked.connect(self.is_every_element_grouped)  # Connect the button to a function that will sort tiles by color
 
         # Add a button to the top right corner of the QGraphicsView for sorting tiles by number
         self.sort_by_number_button = QPushButton('Sort by Number', view)
         self.sort_by_number_button.setGeometry(1600, 70, 120, 30)  # Set the button position
         self.sort_by_number_button.clicked.connect(
         self.sort_tiles_by_number)  # Connect the button to a function that will sort tiles by number
+
+    def check_move(self):
+        #board_bin = np.where(self.board != None)
+        #print(board_bin)
+        indices = np.where(
+            np.logical_and(self.board != None, np.roll(self.board != None, -1, axis=1) & np.roll(self.board != None, -2, axis=1)))
+
+        # Print the indices of the non-None elements that form a group of three or more
+        print(indices[0])
+
+    def is_every_element_grouped(self):
+        arr = self.board
+        # Get indices of non-None elements
+        non_none_indices = np.where(arr != None)
+
+        # Get values of non-None elements
+        non_none_values = arr[non_none_indices]
+        print(non_none_values)
+        # Find indices where values change
+        value_changes = np.where(non_none_values[:-1] != non_none_values[1:])[0]
+
+        # Split non_none_indices into groups based on value changes
+        groups = np.split(non_none_indices[1], value_changes + 1)
+
+        # Check if every group has length 3 or more and has the same value
+        for group in groups:
+            if len(group) < 3 or len(np.unique(arr[group])) > 1:
+                print('Nie')
+
+        print('Tag')
 
     def sort_tiles_by_color(self):
         colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
@@ -124,6 +160,12 @@ class Board(QGraphicsScene):
         for item in items:
             if isinstance(item, Tile):
                 self.drag_tile = item
+                if self.drag_tile in self.board:
+                    pos = self.snap_to_grid(self.drag_tile.pos())
+                    # Get the index of the position where the tile is dropped
+                    row = int(pos.y() / self.height)
+                    col = int(pos.x() / self.width)
+                    self.board[row, col] = None
                 break
 
 
@@ -137,8 +179,26 @@ class Board(QGraphicsScene):
         # Move the dropped tile to the closest grid position
         if hasattr(self, 'drag_tile') and self.drag_tile is not None:
             pos = self.snap_to_grid(self.drag_tile.pos())
+            # Get the index of the position where the tile is dropped
+            row = int(pos.y() / self.height)
+            col = int(pos.x() / self.width)
+            print(row)
+            print(col)
+            if self.drag_tile in self.user_tiles and row < 10:
+                # Append the tile to the corresponding index on the board
+                self.board[row, col] = self.drag_tile
+                self.user_tiles.remove(self.drag_tile)
+            #elif self.drag_tile in self.board and row >= 10:
+            elif self.drag_tile not in self.user_tiles and row >= 10:
+                # Append the tile to the corresponding index on the board
+                #self.board
+                self.user_tiles.append(self.drag_tile)
+            #elif self.drag_tile in self.board and row < 10:
+            elif self.drag_tile not in self.user_tiles and row < 10:
+                self.board[row, col] = self.drag_tile
             self.drag_tile.setPos(pos)
             self.drag_tile = None
+        #print(self.board)
 
 if __name__ == '__main__':
     app = QApplication([])
