@@ -101,6 +101,7 @@ class Board(QGraphicsScene):
         #print(non_none_indices)
         # Iterate over each index in the non_none_indices array
         counter = 0
+        colors = []
         #groups = [[]]
         if non_none_indices[0].size < 3:
             return False
@@ -110,18 +111,37 @@ class Board(QGraphicsScene):
 
             if counter == 0:
                 counter+=1
+                colors = []
                 #groups.append(board[non_none_indices])
             elif non_none_indices[0][i] == y and non_none_indices[1][i] == x+1:
+                if board[non_none_indices[0][i], non_none_indices[1][i]].numer != number and board[non_none_indices[0][i], non_none_indices[1][i]].numer != number + 1:
+                    return False
+                elif board[non_none_indices[0][i], non_none_indices[1][i]].numer == number + 1 and board[non_none_indices[0][i],non_none_indices[1][i]].colour != color:
+                    return False
+                elif board[non_none_indices[0][i], non_none_indices[1][i]].numer == number and board[non_none_indices[0][i],non_none_indices[1][i]].colour in colors:
+                    return False
+                elif board[non_none_indices[0][i], non_none_indices[1][i]].numer == number and not board[
+                    non_none_indices[0][i], non_none_indices[1][i]].colour in colors:
+                    colors.append(board[
+                    non_none_indices[0][i], non_none_indices[1][i]].colour)
+                print(board[non_none_indices[0][i],non_none_indices[1][i]].colour)
+                print(color)
                 counter += 1
             elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter <3:
-                print(counter)
+                #print(counter)
                 return False
             elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter >= 3:
                 counter = 1
+                colors = []
 
             y = non_none_indices[0][i]
             x = non_none_indices[1][i]
+            color = board[non_none_indices[0][i],non_none_indices[1][i]].colour
+            number = board[non_none_indices[0][i], non_none_indices[1][i]].numer
+            print(number)
         print(counter)
+        if counter < 3:
+            return False
         return True
 
 
