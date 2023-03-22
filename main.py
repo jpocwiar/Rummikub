@@ -72,7 +72,7 @@ class Board(QGraphicsScene):
 
         self.accept_move = QPushButton('Accept move', view)
         self.accept_move.setGeometry(1600, 540, 120, 30)  # Set the button position
-        self.accept_move.clicked.connect(self.is_every_element_grouped)  # Connect the button to a function that will sort tiles by color
+        self.accept_move.clicked.connect(self.check_move)  # Connect the button to a function that will sort tiles by color
 
         # Add a button to the top right corner of the QGraphicsView for sorting tiles by number
         self.sort_by_number_button = QPushButton('Sort by Number', view)
@@ -83,32 +83,46 @@ class Board(QGraphicsScene):
     def check_move(self):
         #board_bin = np.where(self.board != None)
         #print(board_bin)
-        indices = np.where(
-            np.logical_and(self.board != None, np.roll(self.board != None, -1, axis=1) & np.roll(self.board != None, -2, axis=1)))
+        # indices = np.where(
+        #     np.logical_and(self.board != None, np.roll(self.board != None, -1, axis=1) & np.roll(self.board != None, -2, axis=1)))
+        #
+        # # Print the indices of the non-None elements that form a group of three or more
+        # print(indices[0])
+        if self.is_every_element_grouped():
+            print("youp")
+        else:
+            print("nah")
 
-        # Print the indices of the non-None elements that form a group of three or more
-        print(indices[0])
 
     def is_every_element_grouped(self):
-        arr = self.board
+        board = self.board
         # Get indices of non-None elements
-        non_none_indices = np.where(arr != None)
+        non_none_indices = np.where(board != None)
+        print(non_none_indices)
+        # Iterate over each index in the non_none_indices array
+        for i in range(len(non_none_indices[0])):
+            row = non_none_indices[0][i]
+            col = non_none_indices[1][i]
 
-        # Get values of non-None elements
-        non_none_values = arr[non_none_indices]
-        print(non_none_values)
-        # Find indices where values change
-        value_changes = np.where(non_none_values[:-1] != non_none_values[1:])[0]
+            neighbors = []
 
-        # Split non_none_indices into groups based on value changes
-        groups = np.split(non_none_indices[1], value_changes + 1)
+            # Check if the current tile has at least two neighbors in adjacent horizontal axes
+            if col > 0 and board[row][col - 1] is not None:
+                neighbors.append(board[row][col - 1])
+            if col < len(board[0]) - 1 and board[row][col + 1] is not None:
+                neighbors.append(board[row][col + 1])
 
-        # Check if every group has length 3 or more and has the same value
-        for group in groups:
-            if len(group) < 3 or len(np.unique(arr[group])) > 1:
-                print('Nie')
+            # If the current tile has less than two neighbors, return False
+            if len(neighbors) < 2:
+                return False
 
-        print('Tag')
+            # Check if the current tile has the same index as its neighbors in the vertical axis
+            for neighbor in neighbors:
+                if neighbor is not None and neighbor.index != board[row][col].index:
+                    return False
+
+        # If all tiles have at least two neighbors and are in a group of three or more, return True
+        return True
 
     def sort_tiles_by_color(self):
         colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
@@ -149,8 +163,12 @@ class Board(QGraphicsScene):
 
     def snap_to_grid(self, pos):
         # Obliczenie pozycji klocka na siatce
-        x = int(round(pos.x() / self.width)) * self.width
-        y = int(round(pos.y() / self.height)) * self.height
+        ind_x = int(round(pos.x() / self.width))
+        ind_y = int(round(pos.y() / self.height))
+        while self.board[ind_y, ind_x] is not None:
+            ind_x+=1
+        x = ind_x * self.width
+        y = ind_y * self.height
         return QPointF(x, y)
 
 
@@ -161,7 +179,7 @@ class Board(QGraphicsScene):
             if isinstance(item, Tile):
                 self.drag_tile = item
                 if self.drag_tile in self.board:
-                    pos = self.snap_to_grid(self.drag_tile.pos())
+                    pos = self.drag_tile.pos()
                     # Get the index of the position where the tile is dropped
                     row = int(pos.y() / self.height)
                     col = int(pos.x() / self.width)
