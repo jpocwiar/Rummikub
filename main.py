@@ -98,31 +98,33 @@ class Board(QGraphicsScene):
         board = self.board
         # Get indices of non-None elements
         non_none_indices = np.where(board != None)
-        print(non_none_indices)
+        #print(non_none_indices)
         # Iterate over each index in the non_none_indices array
-        for i in range(len(non_none_indices[0])):
-            row = non_none_indices[0][i]
-            col = non_none_indices[1][i]
+        counter = 0
+        #groups = [[]]
+        if non_none_indices[0].size < 3:
+            return False
+        for i in range(non_none_indices[0].size):
+            #print(non_none_indices[0][i])
+            #print(non_none_indices[1][i])
 
-            neighbors = []
-
-            # Check if the current tile has at least two neighbors in adjacent horizontal axes
-            if col > 0 and board[row][col - 1] is not None:
-                neighbors.append(board[row][col - 1])
-            if col < len(board[0]) - 1 and board[row][col + 1] is not None:
-                neighbors.append(board[row][col + 1])
-
-            # If the current tile has less than two neighbors, return False
-            if len(neighbors) < 2:
+            if counter == 0:
+                counter+=1
+                #groups.append(board[non_none_indices])
+            elif non_none_indices[0][i] == y and non_none_indices[1][i] == x+1:
+                counter += 1
+            elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter <3:
+                print(counter)
                 return False
+            elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter >= 3:
+                counter = 1
 
-            # Check if the current tile has the same index as its neighbors in the vertical axis
-            for neighbor in neighbors:
-                if neighbor is not None and neighbor.index != board[row][col].index:
-                    return False
-
-        # If all tiles have at least two neighbors and are in a group of three or more, return True
+            y = non_none_indices[0][i]
+            x = non_none_indices[1][i]
+        print(counter)
         return True
+
+
 
     def sort_tiles_by_color(self):
         colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
@@ -200,8 +202,8 @@ class Board(QGraphicsScene):
             # Get the index of the position where the tile is dropped
             row = int(pos.y() / self.height)
             col = int(pos.x() / self.width)
-            print(row)
-            print(col)
+            #print(row)
+            #print(col)
             if self.drag_tile in self.user_tiles and row < 10:
                 # Append the tile to the corresponding index on the board
                 self.board[row, col] = self.drag_tile
