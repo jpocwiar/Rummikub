@@ -58,7 +58,7 @@ class Board(QGraphicsScene):
         self.tiles = []
         self.user_tiles = []
         self.board = np.full((15, 40), None, dtype=object)
-
+        self.groups = []
         self.width = 50
         self.height = 80
         self.foreground_item = ForegroundItem(self.width * 20, self.height * 2) # Create an instance of ForegroundItem
@@ -96,17 +96,47 @@ class Board(QGraphicsScene):
         # # Print the indices of the non-None elements that form a group of three or more
         # print(indices[0])
         if self.is_every_element_grouped():
-            print("youp")
+            #print("youp")
+            for group in self.groups:
+                non_joker = np.sum([not til.is_joker for til in group])
+                if(non_joker <= 1):
+                    print("ok")
+                else:
+                    colors = set(str(til.colour) for til in group if not til.is_joker)
+                    color_count = len(colors)
+                    print("kolory: " + str(color_count))
+                    if color_count == 1:
+                        unique_values = set(til.numer - idx for idx, til in enumerate(group) if not til.is_joker)
+                        if len(unique_values) == 1 and not unique_values == {0} and not next(iter(unique_values)) + len(group) - 1 >= 14:
+                            print(unique_values)
+                            print("po kolei")
+                        else:
+                            print("nie po kolei") 
+                            return False
+                    elif color_count == non_joker and len(group) <= 4:
+                        values = set(til.numer for til in group if not til.is_joker)
+                        if len(values) == 1:
+                            print("te same cyfr")
+                        else:
+                            print("źle")
+                            return False
+                    else:
+                        print("źle")
+                        return False
+
+
+                    for tile in group:
+                        print(tile.numer)
+                        print(tile.colour)
         else:
             print("nah")
             msg_box = QMessageBox()
-
-            msg_box.setText("Układ jest nieprawidłowy")
+            msg_box.setText("Układ musi zawierać co najmniej 3 klocki!")
             #msg_box.setWindowTitle("Message Box")
-
             msg_box.setStandardButtons(QMessageBox.Ok)
 
             response = msg_box.exec_()
+            return
 
 
     def is_every_element_grouped(self):
@@ -117,36 +147,52 @@ class Board(QGraphicsScene):
         # Iterate over each index in the non_none_indices array
         counter = 0
         colors = []
-        groups = [[]]
+        self.groups = []
         if non_none_indices[0].size < 3:
             return False
         for i in range(non_none_indices[0].size):
             #print(non_none_indices[0][i])
             #print(non_none_indices[1][i])
+            #print(non_none_indices[0].size-1)
+            #print(i)
+            #print(counter)
 
             if counter == 0:
                 counter += 1
                 colors = []
                 group = [board[non_none_indices[0][i],non_none_indices[1][i]]]
                 #groups.append(board[non_none_indices])
+                print("eeee")
             elif non_none_indices[0][i] == y and non_none_indices[1][i] == x+1: #sprawdzanie czy obok siebie
                 counter += 1
                 group.append(board[non_none_indices[0][i],non_none_indices[1][i]])
-            elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter <3:
+                if i == non_none_indices[0].size-1 and counter >= 3:
+                    self.groups.append(group)
+                    print("aaaa")
+                print("ddddd")
+            elif (not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) or i == non_none_indices[0].size) and counter <3:
                 #print(counter)
+
+                print("ccccc")
                 return False
             elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter >= 3:
                 counter = 1
+                self.groups.append(group)
+                group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
                 colors = []
+                print("bbbb")
+
+
 
             y = non_none_indices[0][i]
             x = non_none_indices[1][i]
             color = board[non_none_indices[0][i],non_none_indices[1][i]].colour
             number = board[non_none_indices[0][i], non_none_indices[1][i]].numer
-            print(number)
-        print(counter)
+            #print(number)
+        #print(counter)
         if counter < 3:
             return False
+        print(len(self.groups))
         return True
 
 
