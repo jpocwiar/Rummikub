@@ -57,6 +57,7 @@ class Board(QGraphicsScene):
         self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
         self.user_tiles = []
+        self.selected_tiles = []
         self.board = np.full((15, 40), None, dtype=object)
         self.groups = []
         self.width = 50
@@ -65,6 +66,9 @@ class Board(QGraphicsScene):
         self.foreground_item.setPos(self.sceneRect().width() / 2 - self.width * 20 / 2, int(round((self.sceneRect().height() - self.height * 2)/self.height))*self.height)
         self.addItem(self.foreground_item) # Add the foreground item to the scene
 
+        self.selection_rect = None
+        self.selection_start_pos = None
+        self.mouse_offsets = []
 
         # Add a button to the top right corner of the QGraphicsView
         self.button = QPushButton('Draw Tile', view)
@@ -253,45 +257,90 @@ class Board(QGraphicsScene):
         for item in items:
             if isinstance(item, Tile):
                 self.drag_tile = item
+
                 if self.drag_tile in self.board:
                     pos = self.drag_tile.pos()
                     # Get the index of the position where the tile is dropped
                     row = int(pos.y() / self.height)
                     col = int(pos.x() / self.width)
                     self.board[row, col] = None
+                if self.drag_tile in self.selected_tiles:
+                    for tile in self.selected_tiles:
+                        pos_til = tile.pos()
+                        self.mouse_offsets.append(pos_til - self.drag_tile.pos())
+                        if tile in self.board:
+                            row = int(pos_til.y() / self.height)
+                            col = int(pos_til.x() / self.width)
+                            self.board[row, col] = None
+
                 break
+        else:
+            self.selected_tiles = []
+            self.mouse_offsets = []
+            self.selection_start_pos = event.scenePos()
+            self.selection_rect = QGraphicsRectItem()
+            self.selection_rect.setPen(QPen(Qt.black, 2, Qt.DotLine))
+            self.addItem(self.selection_rect)
 
 
     def mouseMoveEvent(self, event):
-        # Przeciąganie klocka
         if hasattr(self, 'drag_tile') and self.drag_tile is not None:
-            pos = event.scenePos() - self.drag_tile.boundingRect().center()
-            self.drag_tile.setPos(pos)
+            if not self.drag_tile in self.selected_tiles:
+                pos = event.scenePos() - self.drag_tile.boundingRect().center()
+                self.drag_tile.setPos(pos)
+            if self.drag_tile in self.selected_tiles:
+                for tile, offset in zip(self.selected_tiles, self.mouse_offsets):
+                    print(offset)
+                    pos = event.scenePos() - tile.boundingRect().center() + offset
+                    tile.setPos(pos)
+        elif self.selection_rect is not None:
+            rect = QRectF(self.selection_start_pos, event.scenePos())
+            self.selection_rect.setRect(rect.normalized())
 
     def mouseReleaseEvent(self, event):
-        # Move the dropped tile to the closest grid position
         if hasattr(self, 'drag_tile') and self.drag_tile is not None:
-            pos = self.snap_to_grid(self.drag_tile.pos())
-            # Get the index of the position where the tile is dropped
-            row = int(pos.y() / self.height)
-            col = int(pos.x() / self.width)
-            #print(row)
-            #print(col)
-            if self.drag_tile in self.user_tiles and row < 10:
-                # Append the tile to the corresponding index on the board
-                self.board[row, col] = self.drag_tile
-                self.user_tiles.remove(self.drag_tile)
-            #elif self.drag_tile in self.board and row >= 10:
-            elif self.drag_tile not in self.user_tiles and row >= 10:
-                # Append the tile to the corresponding index on the board
-                #self.board
-                self.user_tiles.append(self.drag_tile)
-            #elif self.drag_tile in self.board and row < 10:
-            elif self.drag_tile not in self.user_tiles and row < 10:
-                self.board[row, col] = self.drag_tile
-            self.drag_tile.setPos(pos)
+            if not self.drag_tile in self.selected_tiles:
+                pos = self.snap_to_grid(self.drag_tile.pos())
+                # Get the index of the position where the tile is dropped
+                row = int(pos.y() / self.height)
+                col = int(pos.x() / self.width)
+                if self.drag_tile in self.user_tiles and row < 10:
+                    # Append the tile to the corresponding index on the board
+                    self.board[row, col] = self.drag_tile
+                    self.user_tiles.remove(self.drag_tile)
+                elif self.drag_tile not in self.user_tiles and row >= 10:
+                    # Append the tile to the corresponding index on the board
+                    self.user_tiles.append(self.drag_tile)
+                elif self.drag_tile not in self.user_tiles and row < 10:
+                    self.board[row, col] = self.drag_tile
+                self.drag_tile.setPos(pos)
+            if self.drag_tile in self.selected_tiles:
+                for tile in self.selected_tiles: # dwa razy się jeden kloc robi, trzeba sprawdzić czy to coś nie psuje
+                    pos = self.snap_to_grid(tile.pos())
+                    # Get the index of the position where the tile is dropped
+                    row = int(pos.y() / self.height)
+                    col = int(pos.x() / self.width)
+                    if tile in self.user_tiles and row < 10:
+                        # Append the tile to the corresponding index on the board
+                        self.board[row, col] = tile
+                        self.user_tiles.remove(tile)
+                    elif tile not in self.user_tiles and row >= 10:
+                        # Append the tile to the corresponding index on the board
+                        self.user_tiles.append(tile)
+                    elif tile not in self.user_tiles and row < 10:
+                        self.board[row, col] = tile
+                    tile.setPos(pos)
             self.drag_tile = None
-        #print(self.board)
+        elif self.selection_rect is not None:
+            selected_items = self.items(self.selection_rect.rect())
+            for item in selected_items:
+                if isinstance(item, Tile):
+                    self.selected_tiles.append(item)
+                    print(item.numer)
+            print(len(self.selected_tiles))
+            self.removeItem(self.selection_rect)
+            self.selection_rect = None
+            self.selection_start_pos = None
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
