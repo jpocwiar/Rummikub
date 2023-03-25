@@ -1,6 +1,6 @@
-from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsItemGroup, QPushButton, QMessageBox
-from PySide2.QtGui import QColor, QBrush, QPen, QFont, QPainter
-from PySide2.QtCore import Qt, QRectF, QPointF
+from PySide2.QtWidgets import *
+from PySide2.QtGui import *
+from PySide2.QtCore import *
 import random
 import numpy as np
 import sys
@@ -65,6 +65,7 @@ class Board(QGraphicsScene):
         self.foreground_item.setPos(self.sceneRect().width() / 2 - self.width * 20 / 2, int(round((self.sceneRect().height() - self.height * 2)/self.height))*self.height)
         self.addItem(self.foreground_item) # Add the foreground item to the scene
 
+
         # Add a button to the top right corner of the QGraphicsView
         self.button = QPushButton('Draw Tile', view)
         self.button.setGeometry(1600, 500, 90, 30)  # Set the button position
@@ -78,7 +79,7 @@ class Board(QGraphicsScene):
 
         self.accept_move = QPushButton('Accept move', view)
         self.accept_move.setGeometry(1600, 540, 120, 30)  # Set the button position
-        self.accept_move.clicked.connect(self.check_move)  # Connect the button to a function that will sort tiles by color
+        self.accept_move.clicked.connect(self.make_move)
 
         # Add a button to the top right corner of the QGraphicsView for sorting tiles by number
         self.sort_by_number_button = QPushButton('Sort by Number', view)
@@ -87,14 +88,15 @@ class Board(QGraphicsScene):
         self.sort_tiles_by_number)  # Connect the button to a function that will sort tiles by number
 
         self.generate_tiles()
+
+    def make_move(self):
+        if self.check_move():
+            print("ruch prawidłowy")
+            # przejdź do następnego gracza
+        else:
+            print("ruch nieprawidłowy")
+
     def check_move(self):
-        #board_bin = np.where(self.board != None)
-        #print(board_bin)
-        # indices = np.where(
-        #     np.logical_and(self.board != None, np.roll(self.board != None, -1, axis=1) & np.roll(self.board != None, -2, axis=1)))
-        #
-        # # Print the indices of the non-None elements that form a group of three or more
-        # print(indices[0])
         if self.is_every_element_grouped():
             #print("youp")
             for group in self.groups:
@@ -111,7 +113,7 @@ class Board(QGraphicsScene):
                             print(unique_values)
                             print("po kolei")
                         else:
-                            print("nie po kolei") 
+                            print("nie po kolei")
                             return False
                     elif color_count == non_joker and len(group) <= 4:
                         values = set(til.numer for til in group if not til.is_joker)
@@ -123,11 +125,7 @@ class Board(QGraphicsScene):
                     else:
                         print("źle")
                         return False
-
-
-                    for tile in group:
-                        print(tile.numer)
-                        print(tile.colour)
+            return True
         else:
             print("nah")
             msg_box = QMessageBox()
@@ -136,7 +134,7 @@ class Board(QGraphicsScene):
             msg_box.setStandardButtons(QMessageBox.Ok)
 
             response = msg_box.exec_()
-            return
+            return False
 
 
     def is_every_element_grouped(self):
