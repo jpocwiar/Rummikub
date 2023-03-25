@@ -1,17 +1,19 @@
-from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsItemGroup, QPushButton
+from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsItemGroup, QPushButton, QMessageBox
 from PySide2.QtGui import QColor, QBrush, QPen, QFont, QPainter
 from PySide2.QtCore import Qt, QRectF, QPointF
 import random
 import numpy as np
+import sys
 
 class Tile(QGraphicsItem):
-    def __init__(self, colour, numer):
+    def __init__(self, colour, numer, is_joker=False):
         super().__init__()
         self.width = 50
         self.height = 80
         self.rect = QRectF(0, 0, self.width, self.height)  # Ustawienie wymiarów klocka
         self.colour = colour  # colour klocka
         self.numer = numer  # Numer klocka
+        self.is_joker = is_joker
 
     def boundingRect(self):
         return self.rect
@@ -24,7 +26,10 @@ class Tile(QGraphicsItem):
 
         # Rysowanie numeru klocka
         painter.setFont(QFont('Arial', 16))
-        numer_text = str(self.numer)
+        if(self.is_joker):
+            numer_text = 'J'
+        else:
+            numer_text = str(self.numer)
         numer_rect = painter.fontMetrics().boundingRect(numer_text)
         numer_x = self.rect.center().x() - numer_rect.width() / 2
         numer_y = self.rect.center().y() - numer_rect.height() / 4
@@ -53,10 +58,11 @@ class Board(QGraphicsScene):
         self.tiles = []
         self.user_tiles = []
         self.board = np.full((15, 40), None, dtype=object)
+
         self.width = 50
         self.height = 80
-        self.foreground_item = ForegroundItem(self.width * 10, self.height * 2) # Create an instance of ForegroundItem
-        self.foreground_item.setPos(self.sceneRect().width() / 2 - self.width * 10 / 2, int(round((self.sceneRect().height() - self.height * 2)/self.height))*self.height)
+        self.foreground_item = ForegroundItem(self.width * 20, self.height * 2) # Create an instance of ForegroundItem
+        self.foreground_item.setPos(self.sceneRect().width() / 2 - self.width * 20 / 2, int(round((self.sceneRect().height() - self.height * 2)/self.height))*self.height)
         self.addItem(self.foreground_item) # Add the foreground item to the scene
 
         # Add a button to the top right corner of the QGraphicsView
@@ -80,6 +86,7 @@ class Board(QGraphicsScene):
         self.sort_by_number_button.clicked.connect(
         self.sort_tiles_by_number)  # Connect the button to a function that will sort tiles by number
 
+        self.generate_tiles()
     def check_move(self):
         #board_bin = np.where(self.board != None)
         #print(board_bin)
@@ -92,6 +99,14 @@ class Board(QGraphicsScene):
             print("youp")
         else:
             print("nah")
+            msg_box = QMessageBox()
+
+            msg_box.setText("Układ jest nieprawidłowy")
+            #msg_box.setWindowTitle("Message Box")
+
+            msg_box.setStandardButtons(QMessageBox.Ok)
+
+            response = msg_box.exec_()
 
 
     def is_every_element_grouped(self):
@@ -102,7 +117,7 @@ class Board(QGraphicsScene):
         # Iterate over each index in the non_none_indices array
         counter = 0
         colors = []
-        #groups = [[]]
+        groups = [[]]
         if non_none_indices[0].size < 3:
             return False
         for i in range(non_none_indices[0].size):
@@ -110,23 +125,13 @@ class Board(QGraphicsScene):
             #print(non_none_indices[1][i])
 
             if counter == 0:
-                counter+=1
-                colors = []
-                #groups.append(board[non_none_indices])
-            elif non_none_indices[0][i] == y and non_none_indices[1][i] == x+1:
-                if board[non_none_indices[0][i], non_none_indices[1][i]].numer != number and board[non_none_indices[0][i], non_none_indices[1][i]].numer != number + 1:
-                    return False
-                elif board[non_none_indices[0][i], non_none_indices[1][i]].numer == number + 1 and board[non_none_indices[0][i],non_none_indices[1][i]].colour != color:
-                    return False
-                elif board[non_none_indices[0][i], non_none_indices[1][i]].numer == number and board[non_none_indices[0][i],non_none_indices[1][i]].colour in colors:
-                    return False
-                elif board[non_none_indices[0][i], non_none_indices[1][i]].numer == number and not board[
-                    non_none_indices[0][i], non_none_indices[1][i]].colour in colors:
-                    colors.append(board[
-                    non_none_indices[0][i], non_none_indices[1][i]].colour)
-                print(board[non_none_indices[0][i],non_none_indices[1][i]].colour)
-                print(color)
                 counter += 1
+                colors = []
+                group = [board[non_none_indices[0][i],non_none_indices[1][i]]]
+                #groups.append(board[non_none_indices])
+            elif non_none_indices[0][i] == y and non_none_indices[1][i] == x+1: #sprawdzanie czy obok siebie
+                counter += 1
+                group.append(board[non_none_indices[0][i],non_none_indices[1][i]])
             elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter <3:
                 #print(counter)
                 return False
@@ -151,22 +156,22 @@ class Board(QGraphicsScene):
         self.user_tiles = sorted(self.user_tiles, key=lambda tile: colors.index(tile.colour))
 
         for index, tile in enumerate(self.user_tiles):
-            tile.setPos(self.foreground_item.pos() + QPointF((index % 10) * self.width,
-                                                             int(index / 10) * self.height))
+            tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.width,
+                                                             int(index / 20) * self.height))
 
     def sort_tiles_by_number(self):
         self.user_tiles = sorted(self.user_tiles, key=lambda tile: tile.numer)
 
         for index, tile in enumerate(self.user_tiles):
-            tile.setPos(self.foreground_item.pos() + QPointF((index % 10) * self.width,
-                                                             int(index / 10) * self.height))
+            tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.width,
+                                                             int(index / 20) * self.height))
 
     def draw_tile(self):
         tile = self.tiles.pop()
         self.user_tiles.append(tile)
         # Set the position of the tile relative to the ForegroundItem
-        tile.setPos(self.foreground_item.pos() + QPointF(((len(self.user_tiles) - 1) % 10) * self.width,
-                                                         int((len(self.user_tiles) - 1) / 10) * self.height))
+        tile.setPos(self.foreground_item.pos() + QPointF(((len(self.user_tiles) - 1) % 20) * self.width,
+                                                         int((len(self.user_tiles) - 1) / 20) * self.height))
         self.addItem(tile)
 
     def generate_tiles(self):
@@ -179,6 +184,10 @@ class Board(QGraphicsScene):
                     tile.setFlag(QGraphicsItem.ItemIsMovable)  # Ustawienie możliwości przesuwania klocka
                     #self.addItem(tile)
                     self.tiles.append(tile)
+        tile = Tile(Qt.black, 0, is_joker=True)
+        self.tiles.append(tile)
+        tile = Tile(Qt.red, 0, is_joker=True)
+        self.tiles.append(tile)
         random.shuffle(self.tiles)
         for i in range(14):
             self.draw_tile()
@@ -241,11 +250,10 @@ class Board(QGraphicsScene):
         #print(self.board)
 
 if __name__ == '__main__':
-    app = QApplication([])
+    app = QApplication(sys.argv)
     view = QGraphicsView()
-    board = Board()
-
+    board = Board(view)
     view.setScene(board)
-    board.generate_tiles()
+    view.setFixedSize(1800, 1000) # Set the fixed size of the view
     view.show()
-    app.exec_()
+    sys.exit(app.exec_())
