@@ -4,7 +4,7 @@ from PySide2.QtCore import *
 import random
 import numpy as np
 import sys
-
+import clock_rc
 
 class Timer(QGraphicsItem):
     def __init__(self, parent=None):
@@ -12,7 +12,7 @@ class Timer(QGraphicsItem):
         self.time_left = 30000  # milliseconds
         self.font = QFont('Arial', 24)
 
-        self.pixmap = QPixmap('clockk.png')
+        self.pixmap = QPixmap(":/clock/clockk.png")
 
     def boundingRect(self):
         return QRectF(0, 0, 200, 200)
