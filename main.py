@@ -10,7 +10,7 @@ class Timer(QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.time_left = 30000  # milliseconds
-        self.font = QFont('Arial', 30)
+        self.font = QFont('Arial', 24)
 
         self.pixmap = QPixmap('clockk.png')
 
@@ -45,8 +45,8 @@ class Timer(QGraphicsItem):
 
     def get_time_string(self):
         seconds = self.time_left // 1000
-        milliseconds = (self.time_left % 1000) // 10
-        return f'{seconds:02d}:{milliseconds:02d}'
+        milliseconds = (self.time_left % 1000) // 1
+        return f'{seconds:02d}:{milliseconds:03d}'
 
     def update_time(self):
         self.time_left -= 1
