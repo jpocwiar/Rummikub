@@ -48,11 +48,12 @@ class Timer(QGraphicsItem):
         return f'{seconds:02d}:{milliseconds:03d}'
 
     def update_time(self):
-        self.time_left -= 1
-        if self.time_left < 0:
-            self.time_left = 0
+        self.time_left -= 5
+        if self.time_left < 0 and not self.board.timed_out:
+            self.time_left = 3000
             #if not self.board.timed_out:
-            self.board.make_move()
+
             self.board.timed_out = True
+            self.board.make_move()
 
         self.update()
