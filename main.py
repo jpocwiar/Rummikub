@@ -85,6 +85,14 @@ class Tile(QGraphicsItem):
         painter.setPen(QPen(self.colour))
         painter.drawText(QPointF(numer_x, numer_y), numer_text)
 
+class Player:
+    def __init__(self, name="player"):
+        self.tiles = []
+        self.name = name
+
+    def add_tile(self, tile):
+        self.tiles.append(tile)
+
 class ForegroundItem(QGraphicsItem):
     def __init__(self, width, height):
         super().__init__()
@@ -100,15 +108,20 @@ class ForegroundItem(QGraphicsItem):
         painter.drawRect(self.rect)
 
 class Board(QGraphicsScene):
-    def __init__(self, parent=None):
+    def __init__(self, view, players, parent=None):
         super().__init__(parent)
         self.setSceneRect(0, 0, 1800, 1000)
         self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
-        self.user_tiles = []
+        #self.user_tiles = []
         self.selected_tiles = []
         self.board = np.full((15, 40), None, dtype=object)
         self.groups = []
+
+        self.players = players  # list of players
+        self.current_player_index = 0  # index of the current player in the list
+
+
         self.width = 50
         self.height = 80
         self.foreground_item = ForegroundItem(self.width * 20, self.height * 2) # Create an instance of ForegroundItem
@@ -141,6 +154,11 @@ class Board(QGraphicsScene):
         self.sort_tiles_by_number)  # Connect the button to a function that will sort tiles by number
 
         self.generate_tiles()
+        #dodanie do planszy klocków pierwszego gracza
+        for i, tile in enumerate(self.players[self.current_player_index].tiles):
+            tile.setPos(self.foreground_item.pos() + QPointF(
+                (i % 20) * self.width, int(i / 20) * self.height))
+            self.addItem(tile)
 
         self.timer = Timer()
         self.addItem(self.timer)
@@ -150,6 +168,19 @@ class Board(QGraphicsScene):
         self.timer_timer.timeout.connect(self.update_timer)
         self.timer_timer.start(1)  # milliseconds
 
+        # Add player names to the board
+        self.player_name_items = []
+        y = 800
+        for i, player in enumerate(self.players):
+            name_item = QGraphicsTextItem(player.name)
+            name_item.setFont(QFont("Arial", 16, QFont.Bold))
+            if i == self.current_player_index:
+                name_item.setDefaultTextColor(QColor(255, 0, 0))  # set current player's name to red
+            self.addItem(name_item)
+            name_item.setPos(50, y)
+            self.player_name_items.append(name_item)
+            y += 30
+
     def update_timer(self):
         self.timer.update_time()
 
@@ -157,6 +188,21 @@ class Board(QGraphicsScene):
         if self.check_move():
             print("ruch prawidłowy")
             # przejdź do następnego gracza
+            for tile in self.players[self.current_player_index].tiles:
+                self.removeItem(tile)
+            self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(0, 0, 0))
+            #zmiana indeksu
+            self.current_player_index = (self.current_player_index + 1) % len(self.players)
+
+            #Dodanie klocków następnego gracza
+            for i, tile in enumerate(self.players[self.current_player_index].tiles):
+                tile.setPos(self.foreground_item.pos() + QPointF(
+                    (i % 20) * self.width, int(i / 20) * self.height))
+                self.addItem(tile)
+
+            # update player name items to highlight current player
+            self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 0, 0))
+
         else:
             print("ruch nieprawidłowy")
 
@@ -213,15 +259,9 @@ class Board(QGraphicsScene):
         if non_none_indices[0].size < 3:
             return False
         for i in range(non_none_indices[0].size):
-            #print(non_none_indices[0][i])
-            #print(non_none_indices[1][i])
-            #print(non_none_indices[0].size-1)
-            #print(i)
-            #print(counter)
 
             if counter == 0:
                 counter += 1
-                colors = []
                 group = [board[non_none_indices[0][i],non_none_indices[1][i]]]
                 #groups.append(board[non_none_indices])
                 print("eeee")
@@ -241,7 +281,6 @@ class Board(QGraphicsScene):
                 counter = 1
                 self.groups.append(group)
                 group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
-                colors = []
                 print("bbbb")
 
 
@@ -261,25 +300,27 @@ class Board(QGraphicsScene):
 
     def sort_tiles_by_color(self):
         colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
-        self.user_tiles = sorted(self.user_tiles, key=lambda tile: colors.index(tile.colour))
+        #self.user_tiles = sorted(self.user_tiles, key=lambda tile: colors.index(tile.colour))
+        self.players[self.current_player_index].tiles = sorted(self.players[self.current_player_index].tiles, key=lambda tile: colors.index(tile.colour))
 
-        for index, tile in enumerate(self.user_tiles):
+        for index, tile in enumerate(self.players[self.current_player_index].tiles):
             tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.width,
                                                              int(index / 20) * self.height))
 
     def sort_tiles_by_number(self):
-        self.user_tiles = sorted(self.user_tiles, key=lambda tile: tile.numer)
+        self.players[self.current_player_index].tiles = sorted(self.players[self.current_player_index].tiles, key=lambda tile: tile.numer)
 
-        for index, tile in enumerate(self.user_tiles):
+        for index, tile in enumerate(self.players[self.current_player_index].tiles):
             tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.width,
                                                              int(index / 20) * self.height))
 
     def draw_tile(self):
         tile = self.tiles.pop()
-        self.user_tiles.append(tile)
+        #self.user_tiles.append(tile)
+        self.players[self.current_player_index].add_tile(tile)
         # Set the position of the tile relative to the ForegroundItem
-        tile.setPos(self.foreground_item.pos() + QPointF(((len(self.user_tiles) - 1) % 20) * self.width,
-                                                         int((len(self.user_tiles) - 1) / 20) * self.height))
+        tile.setPos(self.foreground_item.pos() + QPointF(((len(self.players[self.current_player_index].tiles) - 1) % 20) * self.width,
+                                                         int((len(self.players[self.current_player_index].tiles) - 1) / 20) * self.height))
         self.addItem(tile)
 
     def generate_tiles(self):
@@ -297,8 +338,13 @@ class Board(QGraphicsScene):
         tile = Tile(Qt.red, 0, is_joker=True)
         self.tiles.append(tile)
         random.shuffle(self.tiles)
-        for i in range(14):
-            self.draw_tile()
+        for j in range(len(players)):
+            for i in range(14):
+                #self.draw_tile()
+                tile = self.tiles.pop()
+                # self.user_tiles.append(tile)
+                self.players[self.current_player_index].add_tile(tile)
+            self.current_player_index= (self.current_player_index + 1) % len(players)
 
     def snap_to_grid(self, pos):
         # Obliczenie pozycji klocka na siatce
@@ -364,14 +410,14 @@ class Board(QGraphicsScene):
                 # Get the index of the position where the tile is dropped
                 row = int(pos.y() / self.height)
                 col = int(pos.x() / self.width)
-                if self.drag_tile in self.user_tiles and row < 10:
+                if self.drag_tile in self.players[self.current_player_index].tiles and row < 10:
                     # Append the tile to the corresponding index on the board
                     self.board[row, col] = self.drag_tile
-                    self.user_tiles.remove(self.drag_tile)
-                elif self.drag_tile not in self.user_tiles and row >= 10:
+                    self.players[self.current_player_index].tiles.remove(self.drag_tile)
+                elif self.drag_tile not in self.players[self.current_player_index].tiles and row >= 10:
                     # Append the tile to the corresponding index on the board
-                    self.user_tiles.append(self.drag_tile)
-                elif self.drag_tile not in self.user_tiles and row < 10:
+                    self.players[self.current_player_index].tiles.append(self.drag_tile)
+                elif self.drag_tile not in self.players[self.current_player_index].tiles and row < 10:
                     self.board[row, col] = self.drag_tile
                 self.drag_tile.setPos(pos)
             if self.drag_tile in self.selected_tiles:
@@ -380,14 +426,14 @@ class Board(QGraphicsScene):
                     # Get the index of the position where the tile is dropped
                     row = int(pos.y() / self.height)
                     col = int(pos.x() / self.width)
-                    if tile in self.user_tiles and row < 10:
+                    if tile in self.players[self.current_player_index].tiles and row < 10:
                         # Append the tile to the corresponding index on the board
                         self.board[row, col] = tile
-                        self.user_tiles.remove(tile)
-                    elif tile not in self.user_tiles and row >= 10:
+                        self.players[self.current_player_index].tiles.remove(tile)
+                    elif tile not in self.players[self.current_player_index].tiles and row >= 10:
                         # Append the tile to the corresponding index on the board
-                        self.user_tiles.append(tile)
-                    elif tile not in self.user_tiles and row < 10:
+                        self.players[self.current_player_index].tiles.append(tile)
+                    elif tile not in self.players[self.current_player_index].tiles and row < 10:
                         self.board[row, col] = tile
                     tile.setPos(pos)
             self.drag_tile = None
@@ -405,7 +451,9 @@ class Board(QGraphicsScene):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     view = QGraphicsView()
-    board = Board(view)
+    players = [Player("Player1"), Player("Player2"), Player("Player3"), Player("Player4")]
+    #players = [Player("Player1")]
+    board = Board(view, players)
     view.setScene(board)
     view.setFixedSize(1800, 1000) # Set the fixed size of the view
     view.show()
