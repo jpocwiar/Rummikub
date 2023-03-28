@@ -5,107 +5,11 @@ import random
 import numpy as np
 import sys
 import clock_rc
+from timer import Timer
+from tile import Tile
+from player import Player
+from desk import ForegroundItem
 
-class Timer(QGraphicsItem):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.time_left = 30000  # milliseconds
-        self.font = QFont('Arial', 24)
-
-        self.pixmap = QPixmap(":/clock/clockk.png")
-
-    def boundingRect(self):
-        return QRectF(0, 0, 200, 200)
-
-    def paint(self, painter, option, widget):
-        painter.drawPixmap(0, 0, self.pixmap)
-        painter.setPen(QPen(QColor(255, 0, 0), 5, Qt.SolidLine, Qt.RoundCap))
-        angle = (self.time_left / 1000) / 30 * 270 + 135
-        length = 100
-        x = 100 + length * np.cos(np.radians(angle))
-        y = 100 + length * np.sin(np.radians(angle))
-        painter.drawLine(QPointF(100, 100), QPointF(x, y))
-        # rysowanie podziałki
-        painter.setPen(QPen(QColor(0, 0, 0), 3, Qt.SolidLine, Qt.RoundCap))
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        for i in range(0, 31):
-            angle = 135 + i * 9
-            x1 = 100 + 80 * np.cos(np.radians(angle))
-            y1 = 100 + 80 * np.sin(np.radians(angle))
-            x2 = 100 + 90 * np.cos(np.radians(angle))
-            y2 = 100 + 90 * np.sin(np.radians(angle))
-            painter.drawLine(QPointF(x1, y1), QPointF(x2, y2))
-        painter.setFont(self.font)
-        painter.setPen(QPen(QColor(0, 0, 0), 4))
-        painter.drawText(self.boundingRect(), Qt.AlignCenter, self.get_time_string())
-        painter.setPen(QPen(QColor(155, 0, 0), 8, Qt.SolidLine, Qt.RoundCap))
-        painter.drawArc(0, 0, 200, 200, 225 * 16, ((-self.time_left / 1000) / 30 * 270) * 16)
-
-
-
-    def get_time_string(self):
-        seconds = self.time_left // 1000
-        milliseconds = (self.time_left % 1000) // 1
-        return f'{seconds:02d}:{milliseconds:03d}'
-
-    def update_time(self):
-        self.time_left -= 1
-        if self.time_left < 0:
-            self.time_left = 0
-        self.update()
-
-class Tile(QGraphicsItem):
-    def __init__(self, colour, numer, is_joker=False):
-        super().__init__()
-        self.width = 50
-        self.height = 80
-        self.rect = QRectF(0, 0, self.width, self.height)  # Ustawienie wymiarów klocka
-        self.colour = colour  # colour klocka
-        self.numer = numer  # Numer klocka
-        self.is_joker = is_joker
-
-    def boundingRect(self):
-        return self.rect
-
-    def paint(self, painter, option, widget):
-        # Rysowanie klocka
-        painter.setBrush(QBrush(QColor(255, 249, 213)))
-        painter.setPen(QPen(Qt.black))
-        painter.drawRect(self.rect)
-
-        # Rysowanie numeru klocka
-        painter.setFont(QFont('Arial', 16))
-        if(self.is_joker):
-            numer_text = 'J'
-        else:
-            numer_text = str(self.numer)
-        numer_rect = painter.fontMetrics().boundingRect(numer_text)
-        numer_x = self.rect.center().x() - numer_rect.width() / 2
-        numer_y = self.rect.center().y() - numer_rect.height() / 4
-        painter.setPen(QPen(self.colour))
-        painter.drawText(QPointF(numer_x, numer_y), numer_text)
-
-class Player:
-    def __init__(self, name="player"):
-        self.tiles = []
-        self.name = name
-
-    def add_tile(self, tile):
-        self.tiles.append(tile)
-
-class ForegroundItem(QGraphicsItem):
-    def __init__(self, width, height):
-        super().__init__()
-        self.width = width
-        self.height = height
-        self.rect = QRectF(0, 0, self.width, self.height)
-
-    def boundingRect(self):
-        return self.rect
-
-    def paint(self, painter, option, widget):
-        painter.setBrush(QBrush(QColor(255, 255, 255, 0))) # Set the brush color to transparent
-        painter.drawRect(self.rect)
 
 class Board(QGraphicsScene):
     def __init__(self, view, players, parent=None):
@@ -116,6 +20,7 @@ class Board(QGraphicsScene):
         #self.user_tiles = []
         self.selected_tiles = []
         self.board = np.full((15, 40), None, dtype=object)
+        self.board_prev = self.board
         self.groups = []
 
         self.players = players  # list of players
@@ -160,7 +65,8 @@ class Board(QGraphicsScene):
                 (i % 20) * self.width, int(i / 20) * self.height))
             self.addItem(tile)
 
-        self.timer = Timer()
+        self.timed_out = False
+        self.timer = Timer(self)
         self.addItem(self.timer)
         self.timer.setPos(1550, 200)
 
@@ -184,25 +90,41 @@ class Board(QGraphicsScene):
     def update_timer(self):
         self.timer.update_time()
 
+    def restart_timer(self):
+        self.timer.time_left = 30000  # Reset the timer to 30 seconds
+        self.timer.update()  # Update the timer display
+        self.timer.timed_out = False  # Set the timed_out variable to False
+
+    def switch_player(self):
+        # przejdź do następnego gracza
+        for tile in self.players[self.current_player_index].tiles:
+            self.removeItem(tile)
+        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(0, 0, 0))
+        # zmiana indeksu
+        self.current_player_index = (self.current_player_index + 1) % len(self.players)
+
+        # Dodanie klocków następnego gracza
+        for i, tile in enumerate(self.players[self.current_player_index].tiles):
+            tile.setPos(self.foreground_item.pos() + QPointF(
+                (i % 20) * self.width, int(i / 20) * self.height))
+            self.addItem(tile)
+
+        # update player name items to highlight current player
+        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 0, 0))
+        self.restart_timer()
+
     def make_move(self):
         if self.check_move():
             print("ruch prawidłowy")
-            # przejdź do następnego gracza
-            for tile in self.players[self.current_player_index].tiles:
-                self.removeItem(tile)
-            self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(0, 0, 0))
-            #zmiana indeksu
-            self.current_player_index = (self.current_player_index + 1) % len(self.players)
-
-            #Dodanie klocków następnego gracza
-            for i, tile in enumerate(self.players[self.current_player_index].tiles):
-                tile.setPos(self.foreground_item.pos() + QPointF(
-                    (i % 20) * self.width, int(i / 20) * self.height))
-                self.addItem(tile)
-
-            # update player name items to highlight current player
-            self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 0, 0))
-
+            self.board_prev = self.board
+            self.players[self.current_player_index].tiles_prev = self.players[self.current_player_index].tiles
+            self.switch_player()
+        elif not self.check_move() and self.timed_out: #przy pierwszym ruchu może robić jakby osobny board? Zęby to 30 sprawdzać
+            #przywróć stan poprzedni i przejdź do następnego gracza
+            print("ruch nieprawidłowy")
+            self.board = self.board_prev
+            self.players[self.current_player_index].tiles = self.players[self.current_player_index].tiles_prev
+            self.switch_player()
         else:
             print("ruch nieprawidłowy")
 
@@ -270,18 +192,18 @@ class Board(QGraphicsScene):
                 group.append(board[non_none_indices[0][i],non_none_indices[1][i]])
                 if i == non_none_indices[0].size-1 and counter >= 3:
                     self.groups.append(group)
-                    print("aaaa")
-                print("ddddd")
+                    #print("aaaa")
+                #print("ddddd")
             elif (not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) or i == non_none_indices[0].size) and counter <3:
                 #print(counter)
 
-                print("ccccc")
+                #print("ccccc")
                 return False
             elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter >= 3:
                 counter = 1
                 self.groups.append(group)
                 group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
-                print("bbbb")
+                #print("bbbb")
 
 
 
@@ -396,7 +318,7 @@ class Board(QGraphicsScene):
                 self.drag_tile.setPos(pos)
             if self.drag_tile in self.selected_tiles:
                 for tile, offset in zip(self.selected_tiles, self.mouse_offsets):
-                    print(offset)
+                    #print(offset)
                     pos = event.scenePos() - tile.boundingRect().center() + offset
                     tile.setPos(pos)
         elif self.selection_rect is not None:
@@ -442,8 +364,8 @@ class Board(QGraphicsScene):
             for item in selected_items:
                 if isinstance(item, Tile):
                     self.selected_tiles.append(item)
-                    print(item.numer)
-            print(len(self.selected_tiles))
+                    #print(item.numer)
+            #print(len(self.selected_tiles))
             self.removeItem(self.selection_rect)
             self.selection_rect = None
             self.selection_start_pos = None
