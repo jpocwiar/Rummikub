@@ -4,7 +4,7 @@ from PySide2.QtCore import *
 import random
 import numpy as np
 import sys
-import clock_rc
+import graphics_rc
 from timer import Timer
 from tile import Tile
 from player import Player
@@ -17,7 +17,7 @@ class Board(QGraphicsScene):
         self.setSceneRect(0, 0, 1800, 1000)
 
         try:
-            background_image = QImage("wood3.jpg")
+            background_image = QImage(":/backgr/wood3.jpg")
             background_brush = QBrush(
                 background_image.scaled(self.width(), self.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
             self.setBackgroundBrush(background_brush)

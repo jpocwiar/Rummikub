@@ -25,14 +25,22 @@ class Tile(QGraphicsItem):
         # Rysowanie numeru klocka
         painter.setFont(QFont('Arial', 16))
         if(self.is_joker):
-            numer_text = 'J'
+            #numer_text = 'J'
+            image = QPixmap(":/joker/jok.png")
+            desired_size = QSize(30, 30)  # desired size of the scaled pixmap
+            scaled_image = image.scaled(desired_size, Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+
+            image_rect = QRectF(scaled_image.rect())
+            image_rect.moveCenter(self.rect.center())
+            image_rect.translate(0, - image_rect.height() / 2 - 5)
+            painter.drawPixmap(image_rect, image, image.rect())
         else:
             numer_text = str(self.numer)
-        numer_rect = painter.fontMetrics().boundingRect(numer_text)
-        numer_x = self.rect.center().x() - numer_rect.width() / 2
-        numer_y = self.rect.center().y() - numer_rect.height() / 4
-        painter.setPen(QPen(self.colour))
-        painter.drawText(QPointF(numer_x, numer_y), numer_text)
+            numer_rect = painter.fontMetrics().boundingRect(numer_text)
+            numer_x = self.rect.center().x() - numer_rect.width() / 2
+            numer_y = self.rect.center().y() - numer_rect.height() / 4
+            painter.setPen(QPen(self.colour))
+            painter.drawText(QPointF(numer_x, numer_y), numer_text)
 
     def setPosFromIndices(self, i, j):
         self.setPos(j * self.width, i * self.height)
