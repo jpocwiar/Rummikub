@@ -33,3 +33,6 @@ class Tile(QGraphicsItem):
         numer_y = self.rect.center().y() - numer_rect.height() / 4
         painter.setPen(QPen(self.colour))
         painter.drawText(QPointF(numer_x, numer_y), numer_text)
+
+    def setPosFromIndices(self, i, j):
+        self.setPos(j * self.width, i * self.height)

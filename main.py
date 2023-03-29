@@ -44,6 +44,8 @@ class Board(QGraphicsScene):
         self.selection_start_pos = None
         self.mouse_offsets = []
 
+        self.snap_rect = None
+
         # Add a button to the top right corner of the QGraphicsView
         self.button = QPushButton('Draw Tile', view)
         self.button.setGeometry(1600, 500, 90, 30)  # Set the button position
@@ -139,9 +141,11 @@ class Board(QGraphicsScene):
             #print(self.board)
             #print(self.board_prev)
             #print(own_board)
-            func = lambda til: til.numer
+            #tu jest wersja bez pętli, ale nie da się tak zrobić dobrze jokerów w pierwszym ruchu (sumowanie)
+            func = lambda til: til.numer if not til.is_joker else 6
             vfunc = np.vectorize(func)
-            own_tiles = own_board[np.where(own_board != None)]
+            mask = np.where(own_board != None)
+            own_tiles = own_board[mask]
             sum_of_tiles = 0
             if own_tiles.size >1:
                 sum_of_tiles = np.sum(vfunc(own_tiles))
@@ -169,9 +173,9 @@ class Board(QGraphicsScene):
                 print("ruch nieprawidłowy i czas minął!")
                 #print(self.players[self.current_player_index].tiles)
                 #print(self.players[self.current_player_index].tiles_prev)
-                self.board = self.board_prev.copy()
-                self.players[self.current_player_index].tiles = self.players[
-                    self.current_player_index].tiles_prev.copy()
+                # self.board = self.board_prev.copy()
+                # self.players[self.current_player_index].tiles = self.players[
+                #     self.current_player_index].tiles_prev.copy()
                 #self.switch_player()
                 self.draw_tile()
                 #print(self.timed_out)
@@ -186,6 +190,14 @@ class Board(QGraphicsScene):
                 print("Musisz wykonać ruch!")
             elif self.check_move(self.board) and not len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev):
                 print("ruch prawidłowy")
+                if len(self.players[self.current_player_index].tiles) == 0:
+                    msg_box = QMessageBox()
+                    msg_box.setText("Wygrywa " + str(self.players[self.current_player_index].name) + "!")
+                    msg_box.setWindowTitle("Message Box")
+                    msg_box.setStandardButtons(QMessageBox.Ok)
+
+                    response = msg_box.exec_()
+                    sys.exit(app.exec_())
                 self.board_prev = self.board.copy()
                 self.players[self.current_player_index].tiles_prev = self.players[self.current_player_index].tiles.copy()
                 self.switch_player()
@@ -193,10 +205,10 @@ class Board(QGraphicsScene):
             elif (not self.check_move(self.board) and self.timed_out) or (len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and self.timed_out):
                 #przywróć stan poprzedni i przejdź do następnego gracza
                 print("ruch nieprawidłowy i czas minął!")
-                print(self.players[self.current_player_index].tiles)
-                print(self.players[self.current_player_index].tiles_prev)
-                self.board = self.board_prev.copy()
-                self.players[self.current_player_index].tiles = self.players[self.current_player_index].tiles_prev.copy()
+                #print(self.players[self.current_player_index].tiles)
+                #print(self.players[self.current_player_index].tiles_prev)
+                # self.board = self.board_prev.copy()
+                # self.players[self.current_player_index].tiles = self.players[self.current_player_index].tiles_prev.copy()
                 self.draw_tile()
                 #self.switch_player()
                 #print(self.timed_out)
@@ -252,7 +264,6 @@ class Board(QGraphicsScene):
         #print(non_none_indices)
         # Iterate over each index in the non_none_indices array
         counter = 0
-        colors = []
         self.groups = []
         if non_none_indices[0].size < 3:
             return False
@@ -284,10 +295,6 @@ class Board(QGraphicsScene):
 
             y = non_none_indices[0][i]
             x = non_none_indices[1][i]
-            color = board[non_none_indices[0][i],non_none_indices[1][i]].colour
-            number = board[non_none_indices[0][i], non_none_indices[1][i]].numer
-            #print(number)
-        #print(counter)
         if counter < 3:
             return False
         print(len(self.groups))
@@ -312,14 +319,23 @@ class Board(QGraphicsScene):
                                                              int(index / 20) * self.height))
 
     def draw_tile(self):
+        self.board = self.board_prev.copy()
+        self.players[self.current_player_index].tiles = self.players[
+            self.current_player_index].tiles_prev.copy()
         tile = self.tiles.pop()
         #self.user_tiles.append(tile)
         self.players[self.current_player_index].add_tile(tile)
         # Set the position of the tile relative to the ForegroundItem
         tile.setPos(self.foreground_item.pos() + QPointF(((len(self.players[self.current_player_index].tiles) - 1) % 20) * self.width,
                                                          int((len(self.players[self.current_player_index].tiles) - 1) / 20) * self.height))
+        self.board_prev = self.board.copy()
+        self.players[self.current_player_index].tiles_prev = self.players[
+            self.current_player_index].tiles.copy()
         #self.addItem(tile)
         self.switch_player()
+        #print(self.board)
+        #print(self.board_prev)
+        self.refresh_board()
 
     def generate_tiles(self):
         # Generowanie klocków
@@ -355,6 +371,16 @@ class Board(QGraphicsScene):
         y = ind_y * self.height
         return QPointF(x, y)
 
+    def refresh_board(self):
+        mask = np.where(self.board != None)
+        print(len(mask[0]))
+        if len(mask[0]) != 0:
+            print(mask[0][1])
+            print(mask[1][1])
+            tiles = self.board[mask]
+            for i, tile in enumerate(tiles):
+                tile.setPosFromIndices(mask[0][i],mask[1][i])
+
 
     def mousePressEvent(self, event):
         # Znajdowanie klocka, który został kliknięty
@@ -362,6 +388,10 @@ class Board(QGraphicsScene):
         for item in items:
             if isinstance(item, Tile):
                 self.drag_tile = item
+                self.snap_rect = QGraphicsRectItem(QRectF(self.snap_to_grid(event.scenePos()), QSizeF(self.width, self.height)))
+                self.snap_rect.setBrush(QBrush(QColor(Qt.white)))
+                self.snap_rect.setOpacity(0.5)
+                self.addItem(self.snap_rect)
 
                 if self.drag_tile in self.board:
                     pos = self.drag_tile.pos()
@@ -390,11 +420,16 @@ class Board(QGraphicsScene):
 
     def mouseMoveEvent(self, event):
         if hasattr(self, 'drag_tile') and self.drag_tile is not None:
+            if self.snap_rect is not None:
+                # Update snap-to-grid rectangle position and size
+                snap_pos = self.snap_to_grid(event.scenePos() - self.drag_tile.boundingRect().center())
+                self.snap_rect.setRect(QRectF(snap_pos, QSizeF(self.width, self.height)))
+                self.snap_rect.setZValue(-1)
             if not self.drag_tile in self.selected_tiles:
                 pos = event.scenePos() - self.drag_tile.boundingRect().center()
                 self.drag_tile.setPos(pos)
             if self.drag_tile in self.selected_tiles:
-                for tile, offset in zip(self.selected_tiles, self.mouse_offsets):
+                for tile, offset in zip(self.selected_tiles, self.mouse_offsets): #przenoszenie wielu klocków
                     #print(offset)
                     pos = event.scenePos() - tile.boundingRect().center() + offset
                     tile.setPos(pos)
@@ -404,6 +439,10 @@ class Board(QGraphicsScene):
 
     def mouseReleaseEvent(self, event):
         if hasattr(self, 'drag_tile') and self.drag_tile is not None:
+            if self.snap_rect is not None:
+                # Remove snap-to-grid rectangle item
+                self.removeItem(self.snap_rect)
+                self.snap_rect = None
             if not self.drag_tile in self.selected_tiles:
                 pos = self.snap_to_grid(self.drag_tile.pos())
                 # Get the index of the position where the tile is dropped
@@ -460,8 +499,8 @@ class Board(QGraphicsScene):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     view = QGraphicsView()
-    #players = [Player("Player1"), Player("Player2"), Player("Player3"), Player("Player4")]
-    players = [Player("Player1"), Player("Player2")]
+    players = [Player("Player1"), Player("Player2"), Player("Player3"), Player("Player4")]
+    #players = [Player("Player1"), Player("Player2")]
     board = Board(view, players)
     view.setScene(board)
     view.setFixedSize(1810, 1020) # Set the fixed size of the view
