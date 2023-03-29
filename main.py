@@ -142,14 +142,40 @@ class Board(QGraphicsScene):
             #print(self.board_prev)
             #print(own_board)
             #tu jest wersja bez pętli, ale nie da się tak zrobić dobrze jokerów w pierwszym ruchu (sumowanie)
-            func = lambda til: til.numer if not til.is_joker else 6
-            vfunc = np.vectorize(func)
+            # func = lambda til: til.numer if not til.is_joker else 6
+            # vfunc = np.vectorize(func)
             mask = np.where(own_board != None)
+            print(mask[1])
             own_tiles = own_board[mask]
+            # sum_of_tiles = 0
+            # if own_tiles.size >1:
+            #     sum_of_tiles = np.sum(vfunc(own_tiles))
+            # print(sum_of_tiles)
             sum_of_tiles = 0
-            if own_tiles.size >1:
-                sum_of_tiles = np.sum(vfunc(own_tiles))
+            print(own_tiles[1].numer)
+            if len(own_tiles) >=3:
+                for i, tile in enumerate(own_tiles):
+                    sum_of_tiles+=tile.numer
+                    if tile.is_joker:
+                        if i>0 and i<len(own_tiles)-1 and mask[1][i]==mask[1][i-1]+1 and mask[1][i] == mask[1][i+1]-1:
+                            sum_of_tiles+= (own_tiles[i-1].numer+own_tiles[i+1].numer)/2
+                        elif i==0 or mask[1][i]!=mask[1][i-1]+1:
+                            try:
+                                sum_of_tiles+= own_tiles[i+1].numer-(own_tiles[i+2].numer - own_tiles[i+1].numer)
+                            except:
+                                print("coś nie halo0" + str(i))
+                                print(mask[1][i])
+                                print(mask[1][i-1])
+                                print(mask[1][i+1])
+                        elif i==len(own_tiles)-1 or mask[1][i]!=mask[1][i+1]-1:
+                            try:
+                                sum_of_tiles+= own_tiles[i-1].numer-(own_tiles[i-2].numer - own_tiles[i-1].numer)
+                            except:
+                                print("coś nie halo")
+
             print(sum_of_tiles)
+
+
             if len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev) and not self.timed_out:
                 print("Musisz wykonać ruch!")
