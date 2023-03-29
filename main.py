@@ -167,13 +167,14 @@ class Board(QGraphicsScene):
                     self.players[self.current_player_index].tiles_prev)) or sum_of_tiles < 30):
                 # przywróć stan poprzedni i przejdź do następnego gracza
                 print("ruch nieprawidłowy i czas minął!")
-                print(self.players[self.current_player_index].tiles)
-                print(self.players[self.current_player_index].tiles_prev)
+                #print(self.players[self.current_player_index].tiles)
+                #print(self.players[self.current_player_index].tiles_prev)
                 self.board = self.board_prev.copy()
                 self.players[self.current_player_index].tiles = self.players[
                     self.current_player_index].tiles_prev.copy()
-                self.switch_player()
-                print(self.timed_out)
+                #self.switch_player()
+                self.draw_tile()
+                #print(self.timed_out)
             elif not self.check_move(own_board) and not self.timed_out:
                 print("ruch nieprawidłowy")
                 # print(self.timed_out)
@@ -196,8 +197,9 @@ class Board(QGraphicsScene):
                 print(self.players[self.current_player_index].tiles_prev)
                 self.board = self.board_prev.copy()
                 self.players[self.current_player_index].tiles = self.players[self.current_player_index].tiles_prev.copy()
-                self.switch_player()
-                print(self.timed_out)
+                self.draw_tile()
+                #self.switch_player()
+                #print(self.timed_out)
             elif not self.check_move(self.board) and not self.timed_out:
                 print("ruch nieprawidłowy")
                 #print(self.timed_out)
@@ -316,7 +318,8 @@ class Board(QGraphicsScene):
         # Set the position of the tile relative to the ForegroundItem
         tile.setPos(self.foreground_item.pos() + QPointF(((len(self.players[self.current_player_index].tiles) - 1) % 20) * self.width,
                                                          int((len(self.players[self.current_player_index].tiles) - 1) / 20) * self.height))
-        self.addItem(tile)
+        #self.addItem(tile)
+        self.switch_player()
 
     def generate_tiles(self):
         # Generowanie klocków
