@@ -15,7 +15,14 @@ class Board(QGraphicsScene):
     def __init__(self, view, players, parent=None):
         super().__init__(parent)
         self.setSceneRect(0, 0, 1800, 1000)
-        self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
+
+        try:
+            background_image = QImage("wood3.jpg")
+            background_brush = QBrush(
+                background_image.scaled(self.width(), self.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
+            self.setBackgroundBrush(background_brush)
+        except:
+            self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
         #self.user_tiles = []
         self.selected_tiles = []
@@ -72,7 +79,7 @@ class Board(QGraphicsScene):
 
         self.timer_timer = QTimer()
         self.timer_timer.timeout.connect(self.update_timer)
-        self.timer_timer.start(5)  # milliseconds
+        self.timer_timer.start(1)  # milliseconds
 
         # Add player names to the board
         self.player_name_items = []
@@ -80,18 +87,25 @@ class Board(QGraphicsScene):
         for i, player in enumerate(self.players):
             name_item = QGraphicsTextItem(player.name)
             name_item.setFont(QFont("Arial", 16, QFont.Bold))
+            name_item.setDefaultTextColor(QColor(235, 235, 235))
             if i == self.current_player_index:
-                name_item.setDefaultTextColor(QColor(255, 0, 0))  # set current player's name to red
+                name_item.setDefaultTextColor(QColor(255, 100, 100))  # set current player's name to red
             self.addItem(name_item)
             name_item.setPos(50, y)
             self.player_name_items.append(name_item)
             y += 30
 
+        self.tiles_number_item = QGraphicsTextItem("Tiles to draw: " + str(len(self.tiles)))
+        self.tiles_number_item.setFont(QFont("Arial", 16, QFont.Bold))
+        self.tiles_number_item.setDefaultTextColor(QColor(235, 235, 235))
+        self.addItem(self.tiles_number_item)
+        self.tiles_number_item.setPos(1500, 900)
+
     def update_timer(self):
         self.timer.update_time()
 
     def restart_timer(self):
-        print("hello")
+        #print("hello")
         self.timer.time_left = 30000  # Reset the timer to 30 seconds
         self.timer.update()  # Update the timer display
         self.timed_out = False  # Set the timed_out variable to False
@@ -102,10 +116,10 @@ class Board(QGraphicsScene):
         # przejdź do następnego gracza
         for tile in self.players[self.current_player_index].tiles:
             self.removeItem(tile)
-        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(0, 0, 0))
+        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(235, 235, 235))
         # zmiana indeksu
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
-
+        self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
         # Dodanie klocków następnego gracza
         for i, tile in enumerate(self.players[self.current_player_index].tiles):
             tile.setPos(self.foreground_item.pos() + QPointF(
@@ -113,36 +127,83 @@ class Board(QGraphicsScene):
             self.addItem(tile)
 
         # update player name items to highlight current player
-        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 0, 0))
+        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
         self.restart_timer()
 
     def make_move(self):
+        if self.players[self.current_player_index].first_move:
+            #tu trzeba sprawdzać czy suma kloców wrzuconych jest >=30
+
+            #own_board = np.subtract(self.board, self.board_prev)
+            own_board = np.where(self.board == self.board_prev, None, self.board)
+            #print(self.board)
+            #print(self.board_prev)
+            #print(own_board)
+            func = lambda til: til.numer
+            vfunc = np.vectorize(func)
+            own_tiles = own_board[np.where(own_board != None)]
+            sum_of_tiles = 0
+            if own_tiles.size >1:
+                sum_of_tiles = np.sum(vfunc(own_tiles))
+            print(sum_of_tiles)
+            if len(self.players[self.current_player_index].tiles) == len(
+                    self.players[self.current_player_index].tiles_prev) and not self.timed_out:
+                print("Musisz wykonać ruch!")
+            elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
+                    self.players[self.current_player_index].tiles_prev) and sum_of_tiles >=30:
+                print("ruch prawidłowy")
+                self.board_prev = self.board.copy()
+                self.players[self.current_player_index].tiles_prev = self.players[
+                    self.current_player_index].tiles.copy()
+
+                self.players[self.current_player_index].first_move = False #już nie pierwszy ruch
+                self.switch_player()
+            # elif (not self.check_move() and self.timed_out) or (sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour)) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour)))) and self.timed_out): #przy pierwszym ruchu może robić jakby osobny board? Zęby to 30 sprawdzać
+            elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
+                    self.players[self.current_player_index].tiles_prev) and sum_of_tiles < 30 and not self.timed_out:
+                print("Przy pierwszym ruchu konieczne jest wyłożenie klocków o łącznej wartości >=30!")
+            elif self.timed_out and (not self.check_move(own_board) or (
+                    len(self.players[self.current_player_index].tiles) == len(
+                    self.players[self.current_player_index].tiles_prev)) or sum_of_tiles < 30):
+                # przywróć stan poprzedni i przejdź do następnego gracza
+                print("ruch nieprawidłowy i czas minął!")
+                print(self.players[self.current_player_index].tiles)
+                print(self.players[self.current_player_index].tiles_prev)
+                self.board = self.board_prev.copy()
+                self.players[self.current_player_index].tiles = self.players[
+                    self.current_player_index].tiles_prev.copy()
+                self.switch_player()
+                print(self.timed_out)
+            elif not self.check_move(own_board) and not self.timed_out:
+                print("ruch nieprawidłowy")
+                # print(self.timed_out)
         #if sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) and not self.timed_out:
         #print("a" + str(len(self.players[self.current_player_index].tiles)))
         #print("b" + str(len(self.players[self.current_player_index].tiles_prev)))
-        if len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and not self.timed_out:
-            print("Musisz wykonać ruch!")
-        elif self.check_move() and not len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev):
-            print("ruch prawidłowy")
-            self.board_prev = self.board.copy()
-            self.players[self.current_player_index].tiles_prev = self.players[self.current_player_index].tiles.copy()
-            self.switch_player()
-        #elif (not self.check_move() and self.timed_out) or (sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour)) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour)))) and self.timed_out): #przy pierwszym ruchu może robić jakby osobny board? Zęby to 30 sprawdzać
-        elif (not self.check_move() and self.timed_out) or (len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and self.timed_out):
-            #przywróć stan poprzedni i przejdź do następnego gracza
-            print("ruch nieprawidłowy i czas minął!")
-            print(self.players[self.current_player_index].tiles)
-            print(self.players[self.current_player_index].tiles_prev)
-            self.board = self.board_prev.copy()
-            self.players[self.current_player_index].tiles = self.players[self.current_player_index].tiles_prev.copy()
-            self.switch_player()
-            print(self.timed_out)
-        elif not self.check_move() and not self.timed_out:
-            print("ruch nieprawidłowy")
-            #print(self.timed_out)
+        else:
+            if len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and not self.timed_out:
+                print("Musisz wykonać ruch!")
+            elif self.check_move(self.board) and not len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev):
+                print("ruch prawidłowy")
+                self.board_prev = self.board.copy()
+                self.players[self.current_player_index].tiles_prev = self.players[self.current_player_index].tiles.copy()
+                self.switch_player()
+            #elif (not self.check_move() and self.timed_out) or (sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour)) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour)))) and self.timed_out): #przy pierwszym ruchu może robić jakby osobny board? Zęby to 30 sprawdzać
+            elif (not self.check_move(self.board) and self.timed_out) or (len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and self.timed_out):
+                #przywróć stan poprzedni i przejdź do następnego gracza
+                print("ruch nieprawidłowy i czas minął!")
+                print(self.players[self.current_player_index].tiles)
+                print(self.players[self.current_player_index].tiles_prev)
+                self.board = self.board_prev.copy()
+                self.players[self.current_player_index].tiles = self.players[self.current_player_index].tiles_prev.copy()
+                self.switch_player()
+                print(self.timed_out)
+            elif not self.check_move(self.board) and not self.timed_out:
+                print("ruch nieprawidłowy")
+                #print(self.timed_out)
 
-    def check_move(self):
-        if self.is_every_element_grouped():
+    def check_move(self,board):
+        if self.is_every_element_grouped(board):
             #print("youp")
             for group in self.groups:
                 non_joker = np.sum([not til.is_joker for til in group])
@@ -182,8 +243,8 @@ class Board(QGraphicsScene):
             return False
 
 
-    def is_every_element_grouped(self):
-        board = self.board
+    def is_every_element_grouped(self, board):
+        #board = self.board
         # Get indices of non-None elements
         non_none_indices = np.where(board != None)
         #print(non_none_indices)
@@ -199,7 +260,7 @@ class Board(QGraphicsScene):
                 counter += 1
                 group = [board[non_none_indices[0][i],non_none_indices[1][i]]]
                 #groups.append(board[non_none_indices])
-                print("eeee")
+                #print("eeee")
             elif non_none_indices[0][i] == y and non_none_indices[1][i] == x+1: #sprawdzanie czy obok siebie
                 counter += 1
                 group.append(board[non_none_indices[0][i],non_none_indices[1][i]])
@@ -217,7 +278,6 @@ class Board(QGraphicsScene):
                 self.groups.append(group)
                 group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
                 #print("bbbb")
-
 
 
             y = non_none_indices[0][i]
@@ -401,6 +461,6 @@ if __name__ == '__main__':
     players = [Player("Player1"), Player("Player2")]
     board = Board(view, players)
     view.setScene(board)
-    view.setFixedSize(1800, 1000) # Set the fixed size of the view
+    view.setFixedSize(1810, 1020) # Set the fixed size of the view
     view.show()
     sys.exit(app.exec_())
