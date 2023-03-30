@@ -9,6 +9,7 @@ from timer import Timer
 from tile import Tile
 from player import Player
 from desk import ForegroundItem
+from logger import Logger
 
 
 class Board(QGraphicsScene):
@@ -67,7 +68,14 @@ class Board(QGraphicsScene):
         self.sort_by_number_button.clicked.connect(
         self.sort_tiles_by_number)  # Connect the button to a function that will sort tiles by number
 
+        self.text_edit = QTextEdit(view)  # create the QTextEdit widget as a child of the Board
+        self.text_edit.setGeometry(1430, 870, 350, 100)
+        self.text_edit.setReadOnly(True)
+        self.logger = Logger(self.text_edit)  # przekazanie kontrolki QTextEdit
+        #view.setCornerWidget(self.text_edit)
+
         self.generate_tiles()
+        self.logger.log('Początek gry')
         #dodanie do planszy klocków pierwszego gracza
         for i, tile in enumerate(self.players[self.current_player_index].tiles):
             tile.setPos(self.foreground_item.pos() + QPointF(
@@ -101,7 +109,7 @@ class Board(QGraphicsScene):
         self.tiles_number_item.setFont(QFont("Arial", 16, QFont.Bold))
         self.tiles_number_item.setDefaultTextColor(QColor(235, 235, 235))
         self.addItem(self.tiles_number_item)
-        self.tiles_number_item.setPos(1500, 900)
+        self.tiles_number_item.setPos(1500, 810)
 
     def update_timer(self):
         self.timer.update_time()
@@ -145,20 +153,20 @@ class Board(QGraphicsScene):
             # func = lambda til: til.numer if not til.is_joker else 6
             # vfunc = np.vectorize(func)
             mask = np.where(own_board != None)
-            print(mask[1])
+            #print(mask[1])
             own_tiles = own_board[mask]
             # sum_of_tiles = 0
             # if own_tiles.size >1:
             #     sum_of_tiles = np.sum(vfunc(own_tiles))
             # print(sum_of_tiles)
             sum_of_tiles = 0
-            print(own_tiles[1].numer)
+            #print(own_tiles[1].numer)
             if len(own_tiles) >=3:
                 for i, tile in enumerate(own_tiles):
                     sum_of_tiles+=tile.numer
                     if tile.is_joker:
                         if i>0 and i<len(own_tiles)-1 and mask[1][i]==mask[1][i-1]+1 and mask[1][i] == mask[1][i+1]-1:
-                            sum_of_tiles+= (own_tiles[i-1].numer+own_tiles[i+1].numer)/2
+                            sum_of_tiles+= int((own_tiles[i-1].numer+own_tiles[i+1].numer)/2)
                         elif i==0 or mask[1][i]!=mask[1][i-1]+1:
                             try:
                                 sum_of_tiles+= own_tiles[i+1].numer-(own_tiles[i+2].numer - own_tiles[i+1].numer)
@@ -173,15 +181,20 @@ class Board(QGraphicsScene):
                             except:
                                 print("coś nie halo")
 
-            print(sum_of_tiles)
+                print(sum_of_tiles)
+                #self.logger.log(str(self.players[self.current_player_index].name) + " położył kombinację o wartości "+ str(sum_of_tiles))
 
 
             if len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev) and not self.timed_out:
                 print("Musisz wykonać ruch!")
+                self.logger.error(str(self.players[self.current_player_index].name) + " nie wykonał ruchu!")
             elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev) and sum_of_tiles >=30:
                 print("ruch prawidłowy")
+                self.logger.log(
+                    str(self.players[self.current_player_index].name) + " położył kombinację o wartości " + str(
+                        sum_of_tiles))
                 self.board_prev = self.board.copy()
                 self.players[self.current_player_index].tiles_prev = self.players[
                     self.current_player_index].tiles.copy()
@@ -192,21 +205,23 @@ class Board(QGraphicsScene):
             elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev) and sum_of_tiles < 30 and not self.timed_out:
                 print("Przy pierwszym ruchu konieczne jest wyłożenie klocków o łącznej wartości >=30!")
+                self.logger.error(
+                    self.players[self.current_player_index].name + " położył pierwszą kombinację o wartości " + str(
+                        sum_of_tiles) + ". Przy pierwszym ruchu konieczne jest wyłożenie klocków o łącznej wartości >=30!")
             elif self.timed_out and (not self.check_move(own_board) or (
                     len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev)) or sum_of_tiles < 30):
                 # przywróć stan poprzedni i przejdź do następnego gracza
                 print("ruch nieprawidłowy i czas minął!")
-                #print(self.players[self.current_player_index].tiles)
-                #print(self.players[self.current_player_index].tiles_prev)
-                # self.board = self.board_prev.copy()
-                # self.players[self.current_player_index].tiles = self.players[
-                #     self.current_player_index].tiles_prev.copy()
-                #self.switch_player()
+                self.logger.error(
+                    self.players[self.current_player_index].name + " nie wykonał poprawnego ruchu i czas się skończył!")
+
                 self.draw_tile()
                 #print(self.timed_out)
             elif not self.check_move(own_board) and not self.timed_out:
                 print("ruch nieprawidłowy")
+                self.logger.error(
+                    self.players[self.current_player_index].name + " nie wykonał poprawnego ruchu!")
                 # print(self.timed_out)
         #if sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) and not self.timed_out:
         #print("a" + str(len(self.players[self.current_player_index].tiles)))
@@ -214,9 +229,14 @@ class Board(QGraphicsScene):
         else:
             if len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and not self.timed_out:
                 print("Musisz wykonać ruch!")
+                self.logger.error(str(self.players[self.current_player_index].name) + " nie wykonał ruchu!")
             elif self.check_move(self.board) and not len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev):
                 print("ruch prawidłowy")
+                self.logger.log(
+                    str(self.players[self.current_player_index].name) + " wykonał prawidłowy ruch i zostało mu " + str(
+                        len(self.players[self.current_player_index].tiles)) + " klocków")
                 if len(self.players[self.current_player_index].tiles) == 0:
+                    self.logger.log("Wygrywa " + str(self.players[self.current_player_index].name) + "!")
                     msg_box = QMessageBox()
                     msg_box.setText("Wygrywa " + str(self.players[self.current_player_index].name) + "!")
                     msg_box.setWindowTitle("Message Box")
@@ -231,6 +251,8 @@ class Board(QGraphicsScene):
             elif (not self.check_move(self.board) and self.timed_out) or (len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and self.timed_out):
                 #przywróć stan poprzedni i przejdź do następnego gracza
                 print("ruch nieprawidłowy i czas minął!")
+                self.logger.error(
+                    self.players[self.current_player_index].name + " nie wykonał poprawnego ruchu i czas się skończył!")
                 #print(self.players[self.current_player_index].tiles)
                 #print(self.players[self.current_player_index].tiles_prev)
                 # self.board = self.board_prev.copy()
@@ -240,7 +262,9 @@ class Board(QGraphicsScene):
                 #print(self.timed_out)
             elif not self.check_move(self.board) and not self.timed_out:
                 print("ruch nieprawidłowy")
+                self.logger.error(str(self.players[self.current_player_index].name) + "- ruch nieprawidłowy!")
                 #print(self.timed_out)
+
 
     def check_move(self,board):
         if self.is_every_element_grouped(board):
@@ -287,8 +311,6 @@ class Board(QGraphicsScene):
         #board = self.board
         # Get indices of non-None elements
         non_none_indices = np.where(board != None)
-        #print(non_none_indices)
-        # Iterate over each index in the non_none_indices array
         counter = 0
         self.groups = []
         if non_none_indices[0].size < 3:
@@ -323,7 +345,7 @@ class Board(QGraphicsScene):
             x = non_none_indices[1][i]
         if counter < 3:
             return False
-        print(len(self.groups))
+        #print(len(self.groups))
         return True
 
 
@@ -358,6 +380,7 @@ class Board(QGraphicsScene):
         self.players[self.current_player_index].tiles_prev = self.players[
             self.current_player_index].tiles.copy()
         #self.addItem(tile)
+        self.logger.log(str(self.players[self.current_player_index].name) + " dobrał klocek")
         self.switch_player()
         #print(self.board)
         #print(self.board_prev)
@@ -483,6 +506,7 @@ class Board(QGraphicsScene):
                     self.players[self.current_player_index].tiles.append(self.drag_tile)
                 elif self.drag_tile not in self.players[self.current_player_index].tiles and row >= 10 and not self.drag_tile in self.players[self.current_player_index].tiles_prev: #wzięcie nieswojego klocka
                     print("Nie można przeciągać nieswojego klocka na pulpit!")
+                    self.logger.error(str(self.players[self.current_player_index].name) + " podjął próbę kradzieży nieswojego klocka!")
                     pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.width * 20 / 2, int(
                         round((self.sceneRect().height() - self.height * 2) / self.height)) * self.height))
                 elif self.drag_tile not in self.players[self.current_player_index].tiles and row < 10: #zmiana pozycji na planszy
@@ -505,6 +529,8 @@ class Board(QGraphicsScene):
                         self.current_player_index].tiles and row >= 10 and not self.drag_tile in self.players[
                         self.current_player_index].tiles_prev:  # wzięcie nieswojego klocka
                         print("Nie można przeciągać nieswojego klocka na pulpit!")
+                        self.logger.error(str(self.players[
+                                                  self.current_player_index].name) + " podjął próbę kradzieży nieswojego klocka!")
                         pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.width * 20 / 2 + interval*self.width, int(
                             round((self.sceneRect().height() - self.height * 2) / self.height)) * self.height))
                     elif tile not in self.players[self.current_player_index].tiles and row < 10:
@@ -530,5 +556,8 @@ if __name__ == '__main__':
     board = Board(view, players)
     view.setScene(board)
     view.setFixedSize(1810, 1020) # Set the fixed size of the view
+    view.setWindowTitle("Rummikub - Jakub Poćwiardowski 184827")
+    icon = QIcon(":/joker/jok.png")  # Create a QIcon object from the icon file
+    view.setWindowIcon(icon)
     view.show()
     sys.exit(app.exec_())
