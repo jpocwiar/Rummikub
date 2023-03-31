@@ -8,26 +8,24 @@ class Tile(QGraphicsItem):
         super().__init__()
         self.width = 50
         self.height = 80
-        self.rect = QRectF(0, 0, self.width, self.height)  # Ustawienie wymiarów klocka
-        self.colour = colour  # colour klocka
-        self.numer = numer  # Numer klocka
+        self.rect = QRectF(0, 0, self.width, self.height)
+        self.colour = colour
+        self.numer = numer
         self.is_joker = is_joker
 
     def boundingRect(self):
         return self.rect
 
     def paint(self, painter, option, widget):
-        # Rysowanie klocka
         painter.setBrush(QBrush(QColor(255, 249, 213)))
         painter.setPen(QPen(Qt.black))
         painter.drawRect(self.rect)
 
-        # Rysowanie numeru klocka
         painter.setFont(QFont('Arial', 16))
         if(self.is_joker):
             #numer_text = 'J'
             image = QPixmap(":/joker/jok.png")
-            desired_size = QSize(30, 30)  # desired size of the scaled pixmap
+            desired_size = QSize(30, 30)
             scaled_image = image.scaled(desired_size, Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
 
             image_rect = QRectF(scaled_image.rect())

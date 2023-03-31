@@ -14,6 +14,6 @@ class ForegroundItem(QGraphicsItem):
         return self.rect
 
     def paint(self, painter, option, widget):
-        #painter.setBrush(QBrush(QColor(255, 255, 255, 0))) # Set the brush color to transparent
+        #painter.setBrush(QBrush(QColor(255, 255, 255, 0)))
         painter.setBrush(QBrush(QColor(30, 30, 30)))
         painter.drawRect(self.rect)

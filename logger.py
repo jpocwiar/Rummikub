@@ -21,13 +21,12 @@ class Logger:
                 pass
 
     def log(self, message):
-        # Logowanie informacji do pliku dziennika zdarzeń
         self.logger.info(message)
 
         self.text_edit.setTextColor(QColor('black'))
         self.text_edit.append(message)
+        print(message)
 
-        # Aktualizacja widoku kontrolki QTextEdit
         # self.text_edit.setTextColor(QColor('black'))
         # self.text_edit.append(message)
 
@@ -35,6 +34,6 @@ class Logger:
 
         self.logger.warning(f'[BŁĄD] {message}\n')
 
-        # Aktualizacja widoku kontrolki QTextEdit
         self.text_edit.setTextColor(QColor('red'))
         self.text_edit.append(f'[BŁĄD] {message}')
+        print("\033[91m[BŁĄD] {}\033[0m".format(message))
