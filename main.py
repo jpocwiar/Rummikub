@@ -302,8 +302,8 @@ class Board(QGraphicsScene):
             return True
         else:
             #print("Za mało klocków")
-            self.logger.log(
-                str(self.players[self.current_player_index].name) + "- za mało klocków w kombinacji")
+            # self.logger.log(
+            #     str(self.players[self.current_player_index].name) + "- za mało klocków w kombinacji")
             #msg_box = QMessageBox()
             #msg_box.setText("Układ musi zawierać co najmniej 3 klocki!")
             #msg_box.setWindowTitle("Message Box")
@@ -312,48 +312,16 @@ class Board(QGraphicsScene):
             #response = msg_box.exec_()
             return False
 
-
     def is_every_element_grouped(self, board):
-        #board = self.board
         non_none_indices = np.where(board != None)
-        counter = 0
-        self.groups = []
         if non_none_indices[0].size < 3:
             return False
-        for i in range(non_none_indices[0].size):
-
-            if counter == 0:
-                counter += 1
-                group = [board[non_none_indices[0][i],non_none_indices[1][i]]]
-                #groups.append(board[non_none_indices])
-                #print("eeee")
-            elif non_none_indices[0][i] == y and non_none_indices[1][i] == x+1: #sprawdzanie czy obok siebie
-                counter += 1
-                group.append(board[non_none_indices[0][i],non_none_indices[1][i]])
-                if i == non_none_indices[0].size-1 and counter >= 3:
-                    self.groups.append(group)
-                    #print("aaaa")
-                #print("ddddd")
-            elif (not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) or i == non_none_indices[0].size) and counter <3:
-                #print(counter)
-
-                #print("ccccc")
-                return False
-            elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x+1) and counter >= 3:
-                counter = 1
-                self.groups.append(group)
-                group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
-                #print("bbbb")
-
-
-            y = non_none_indices[0][i]
-            x = non_none_indices[1][i]
-        if counter < 3:
-            return False
-        #print(len(self.groups))
-        return True
-
-
+        groups = np.split(board[non_none_indices].flatten(), np.where(np.diff(non_none_indices[0]) > 0)[0] + 1)
+        groups = [list(g) for g in groups if len(g) >= 3]
+        if len(groups) > 0:
+            self.groups = groups
+            return True
+        return False
 
     def sort_tiles_by_color(self):
         colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
@@ -392,27 +360,18 @@ class Board(QGraphicsScene):
 
     def generate_tiles(self):
         # Generowanie klocków
-        #colours = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
-        for colour in self.colours:
-            for numer in range(1, 14):
-                for i in range(2):
-                    tile = Tile(colour, numer)
-                    tile.setFlag(QGraphicsItem.ItemIsMovable)  # Ustawienie możliwości przesuwania klocka
-                    #self.addItem(tile)
-                    self.tiles.append(tile)
-        tile = Tile(Qt.black, 0, is_joker=True)
-        self.tiles.append(tile)
-        tile = Tile(Qt.red, 0, is_joker=True)
-        self.tiles.append(tile)
+        self.tiles = [Tile(colour, numer)
+                      for colour in self.colours
+                      for numer in range(1, 14)
+                      for i in range(2)]
+        self.tiles += [Tile(Qt.black, 0, is_joker=True),
+                       Tile(Qt.red, 0, is_joker=True)]
         random.shuffle(self.tiles)
-        for j in range(len(players)):
-            for i in range(14):
-                #self.draw_tile()
-                tile = self.tiles.pop()
-                # self.user_tiles.append(tile)
-                self.players[self.current_player_index].add_tile(tile)
-            self.players[self.current_player_index].tiles_prev = self.players[self.current_player_index].tiles.copy()
-            self.current_player_index= (self.current_player_index + 1) % len(players)
+        for player in self.players:
+            player.tiles = self.tiles[:14]
+            player.tiles_prev = player.tiles.copy()
+            self.tiles = self.tiles[14:]
+        self.current_player_index = 0
 
     def snap_to_grid(self, pos):
         # Obliczenie pozycji klocka na siatce
@@ -478,10 +437,8 @@ class Board(QGraphicsScene):
                 pos = event.scenePos() - self.drag_tile.boundingRect().center()
                 self.drag_tile.setPos(pos)
             if self.drag_tile in self.selected_tiles:
-                for tile, offset in zip(self.selected_tiles, self.mouse_offsets): #przenoszenie wielu klocków
-                    #print(offset)
-                    pos = event.scenePos() - tile.boundingRect().center() + offset
-                    tile.setPos(pos)
+                [tile.setPos(event.scenePos() - tile.boundingRect().center() + offset) for tile, offset in
+                 zip(self.selected_tiles, self.mouse_offsets)]
         elif self.selection_rect is not None:
             rect = QRectF(self.selection_start_pos, event.scenePos())
             self.selection_rect.setRect(rect.normalized())
