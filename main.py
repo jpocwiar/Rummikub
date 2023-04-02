@@ -313,15 +313,44 @@ class Board(QGraphicsScene):
             return False
 
     def is_every_element_grouped(self, board):
+        # board = self.board
         non_none_indices = np.where(board != None)
+        counter = 0
+        self.groups = []
         if non_none_indices[0].size < 3:
             return False
-        groups = np.split(board[non_none_indices].flatten(), np.where(np.diff(non_none_indices[0]) > 0)[0] + 1)
-        groups = [list(g) for g in groups if len(g) >= 3]
-        if len(groups) > 0:
-            self.groups = groups
-            return True
-        return False
+        for i in range(non_none_indices[0].size):
+
+            if counter == 0:
+                counter += 1
+                group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
+                # groups.append(board[non_none_indices])
+                # print("eeee")
+            elif non_none_indices[0][i] == y and non_none_indices[1][i] == x + 1:  # sprawdzanie czy obok siebie
+                counter += 1
+                group.append(board[non_none_indices[0][i], non_none_indices[1][i]])
+                if i == non_none_indices[0].size - 1 and counter >= 3:
+                    self.groups.append(group)
+                    # print("aaaa")
+                # print("ddddd")
+            elif (not (non_none_indices[0][i] == y and non_none_indices[1][i] == x + 1) or i == non_none_indices[
+                0].size) and counter < 3:
+                # print(counter)
+
+                # print("ccccc")
+                return False
+            elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x + 1) and counter >= 3:
+                counter = 1
+                self.groups.append(group)
+                group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
+                # print("bbbb")
+
+            y = non_none_indices[0][i]
+            x = non_none_indices[1][i]
+        if counter < 3:
+            return False
+        # print(len(self.groups))
+        return True
 
     def sort_tiles_by_color(self):
         colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
@@ -385,7 +414,7 @@ class Board(QGraphicsScene):
 
     def refresh_board(self):
         mask = np.where(self.board != None)
-        print(len(mask[0]))
+        #print(len(mask[0]))
         if len(mask[0]) != 0:
             # print(mask[0][1])
             # print(mask[1][1])
