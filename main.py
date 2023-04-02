@@ -421,35 +421,35 @@ class Board(QGraphicsScene):
 
     def possible_movements(self, tile):
         possible_moves = []
-        if not self.players[self.current_player_index].first_move:
-            mask = (self.board[:, :-1] != None) & (self.board[:, 1:] == None)
-            left_indices = np.column_stack(np.where(mask))
-            left_indices[:, 1] += 1
+        #if not self.players[self.current_player_index].first_move:
+        mask = (self.board[:, :-1] != None) & (self.board[:, 1:] == None)
+        left_indices = np.column_stack(np.where(mask))
+        left_indices[:, 1] += 1
 
-            mask = (self.board[:, 1:] != None) & (self.board[:, :-1] == None)
-            right_indices = np.column_stack(np.where(mask))
-            if tile.is_joker:
-                possible_moves = np.concatenate((left_indices, right_indices))
-            else:
-                try:
-                    for i in range (len(right_indices)):
-                       if self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 1].colour == tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 2].colour == tile.colour:
-                           possible_moves.append((right_indices[i]))
-                       elif self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and self.board[
-                           right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour != tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer and self.board[
-                           right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour:
-                           possible_moves.append((right_indices[i]))
-                    for i in range(len(left_indices)):
-                       if self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and self.board[
-                           left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and self.board[
-                           left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour:
-                           possible_moves.append((left_indices[i]))
-                       elif self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and self.board[
-                           left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and self.board[
-                           left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour:
-                           possible_moves.append((left_indices[i]))
-                except:
-                    pass
+        mask = (self.board[:, 1:] != None) & (self.board[:, :-1] == None)
+        right_indices = np.column_stack(np.where(mask))
+        if tile.is_joker:
+            possible_moves = np.concatenate((left_indices, right_indices))
+        else:
+            try:
+                for i in range (len(right_indices)):
+                   if self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 1].colour == tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 2].colour == tile.colour:
+                       possible_moves.append((right_indices[i]))
+                   elif self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and self.board[
+                       right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour != tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer and self.board[
+                       right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour:
+                       possible_moves.append((right_indices[i]))
+                for i in range(len(left_indices)):
+                   if self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour:
+                       possible_moves.append((left_indices[i]))
+                   elif self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour:
+                       possible_moves.append((left_indices[i]))
+            except:
+                pass
 
             #indices = np.concatenate((left_indices, right_indices))
         return possible_moves
@@ -524,6 +524,7 @@ class Board(QGraphicsScene):
                     rect = QGraphicsRectItem(QRectF(x, y, self.width, self.height))
                     rect.setBrush(QBrush(QColor(Qt.red)))
                     rect.setOpacity(0.5)
+                    rect.setZValue(-1)
                     self.addItem(rect)
                     self.red_rects.append(rect)
 
