@@ -33,7 +33,7 @@ class Board(QGraphicsScene):
         self.colours = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
         self.players = players
         self.current_player_index = 0
-
+        self.red_rects = []
 
         self.width = 50
         self.height = 80
@@ -140,9 +140,6 @@ class Board(QGraphicsScene):
 
             #own_board = np.subtract(self.board, self.board_prev)
             own_board = np.where(self.board == self.board_prev, None, self.board)
-            #print(self.board)
-            #print(self.board_prev)
-            #print(own_board)
             #tu jest wersja bez pętli, ale nie da się tak zrobić dobrze jokerów w pierwszym ruchu (sumowanie)
             # func = lambda til: til.numer if not til.is_joker else 6
             # vfunc = np.vectorize(func)
@@ -422,6 +419,75 @@ class Board(QGraphicsScene):
             for i, tile in enumerate(tiles):
                 tile.setPosFromIndices(mask[0][i],mask[1][i])
 
+    def possible_movements(self, tile):
+        possible_moves = []
+        if not self.players[self.current_player_index].first_move:
+            mask = (self.board[:, :-1] != None) & (self.board[:, 1:] == None)
+            left_indices = np.column_stack(np.where(mask))
+            left_indices[:, 1] += 1
+
+            mask = (self.board[:, 1:] != None) & (self.board[:, :-1] == None)
+            right_indices = np.column_stack(np.where(mask))
+            if tile.is_joker:
+                possible_moves = np.concatenate((left_indices, right_indices))
+            else:
+                try:
+                    for i in range (len(right_indices)):
+                       if self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 1].colour == tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 2].colour == tile.colour:
+                           possible_moves.append((right_indices[i]))
+                       elif self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and self.board[
+                           right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour != tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer and self.board[
+                           right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour:
+                           possible_moves.append((right_indices[i]))
+                    for i in range(len(left_indices)):
+                       if self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and self.board[
+                           left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and self.board[
+                           left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour:
+                           possible_moves.append((left_indices[i]))
+                       elif self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and self.board[
+                           left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and self.board[
+                           left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour:
+                           possible_moves.append((left_indices[i]))
+                except:
+                    pass
+
+            #indices = np.concatenate((left_indices, right_indices))
+        return possible_moves
+
+    # def mousePressEvent(self, event):
+    #     # Znajdowanie klocka, który został kliknięty
+    #     item = self.itemAt(event.scenePos(), QTransform())
+    #
+    #     if isinstance(item, Tile):
+    #         self.drag_tile = item
+    #         self.snap_rect = QGraphicsRectItem(
+    #             QRectF(self.snap_to_grid(event.scenePos()), QSizeF(self.width, self.height)))
+    #         self.snap_rect.setBrush(QBrush(QColor(Qt.white)))
+    #         self.snap_rect.setOpacity(0.5)
+    #         self.addItem(self.snap_rect)
+    #
+    #         if self.drag_tile in self.board:
+    #             pos = self.drag_tile.pos()
+    #             row = int(pos.y() / self.height)
+    #             col = int(pos.x() / self.width)
+    #             self.board[row, col] = None
+    #         if self.drag_tile in self.selected_tiles:
+    #             for tile in self.selected_tiles:
+    #                 pos_til = tile.pos()
+    #                 self.mouse_offsets.append(pos_til - self.drag_tile.pos())
+    #                 if tile in self.board:
+    #                     row = int(pos_til.y() / self.height)
+    #                     col = int(pos_til.x() / self.width)
+    #                     self.board[row, col] = None
+    #
+    #     else:
+    #         self.selected_tiles = []
+    #         self.mouse_offsets = []
+    #         self.selection_start_pos = event.scenePos()
+    #         self.selection_rect = QGraphicsRectItem()
+    #         self.selection_rect.setPen(QPen(Qt.black, 2, Qt.DotLine))
+    #         self.addItem(self.selection_rect)
+
     def mousePressEvent(self, event):
         # Znajdowanie klocka, który został kliknięty
         item = self.itemAt(event.scenePos(), QTransform())
@@ -448,6 +514,19 @@ class Board(QGraphicsScene):
                         col = int(pos_til.x() / self.width)
                         self.board[row, col] = None
 
+            # Get possible movements for the clicked tile
+            possible_moves = self.possible_movements(self.drag_tile)
+
+            # Draw red rectangles at positions corresponding to possible movements
+            if len(possible_moves) > 0:
+                for move in possible_moves:
+                    x, y = move[1] * self.width, move[0] * self.height
+                    rect = QGraphicsRectItem(QRectF(x, y, self.width, self.height))
+                    rect.setBrush(QBrush(QColor(Qt.red)))
+                    rect.setOpacity(0.5)
+                    self.addItem(rect)
+                    self.red_rects.append(rect)
+
         else:
             self.selected_tiles = []
             self.mouse_offsets = []
@@ -455,6 +534,8 @@ class Board(QGraphicsScene):
             self.selection_rect = QGraphicsRectItem()
             self.selection_rect.setPen(QPen(Qt.black, 2, Qt.DotLine))
             self.addItem(self.selection_rect)
+
+
 
     def mouseMoveEvent(self, event):
         if hasattr(self, 'drag_tile') and self.drag_tile is not None:
@@ -478,6 +559,11 @@ class Board(QGraphicsScene):
                 # prostokąt pokazujący możl. ruchu
                 self.removeItem(self.snap_rect)
                 self.snap_rect = None
+            # prostokąty podpowiadające - usuwanie
+            for rect in self.red_rects:
+                self.removeItem(rect)
+            self.red_rects = []
+
             if not self.drag_tile in self.selected_tiles:
                 pos = self.snap_to_grid(self.drag_tile.pos())
                 row = int(pos.y() / self.height)
