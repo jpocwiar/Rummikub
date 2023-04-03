@@ -156,21 +156,38 @@ class Board(QGraphicsScene):
                 for i, tile in enumerate(own_tiles):
                     sum_of_tiles+=tile.numer
                     if tile.is_joker:
-                        if i>0 and i<len(own_tiles)-1 and mask[1][i]==mask[1][i-1]+1 and mask[1][i] == mask[1][i+1]-1:
-                            sum_of_tiles+= int((own_tiles[i-1].numer+own_tiles[i+1].numer)/2)
-                        elif i==0 or mask[1][i]!=mask[1][i-1]+1:
+                        if i>0 and i<len(own_tiles)-1 and mask[1][i]==mask[1][i-1]+1 and mask[1][i] == mask[1][i+1]-1: #czy joker jest pomiędzy dwoma innymi elementami
+                            if own_tiles[i-1].is_joker:
+                                sum_of_tiles += own_tiles[i+1].numer
+                            elif own_tiles[i+1].is_joker:
+                                sum_of_tiles += own_tiles[i - 1].numer
+                            else:
+                                sum_of_tiles+= int((own_tiles[i-1].numer+own_tiles[i+1].numer)/2)
+                        elif i==0 or mask[1][i]!=mask[1][i-1]+1: # gdy joker jest na lewym skraju
                             try:
-                                sum_of_tiles+= own_tiles[i+1].numer-(own_tiles[i+2].numer - own_tiles[i+1].numer)
+                                if own_tiles[i+1].is_joker:
+                                    sum_of_tiles+= own_tiles[i+2].numer
+                                elif own_tiles[i+2].is_joker:
+                                    sum_of_tiles+= own_tiles[i+1].numer
+                                else:
+                                    sum_of_tiles+= own_tiles[i+1].numer-(own_tiles[i+2].numer - own_tiles[i+1].numer)
                             except:
-                                print("coś nie halo0" + str(i))
-                                print(mask[1][i])
-                                print(mask[1][i-1])
-                                print(mask[1][i+1])
-                        elif i==len(own_tiles)-1 or mask[1][i]!=mask[1][i+1]-1:
+                                # print("coś nie halo0" + str(i))
+                                # print(mask[1][i])
+                                # print(mask[1][i-1])
+                                # print(mask[1][i+1])
+                                pass
+                        elif i==len(own_tiles)-1 or mask[1][i]!=mask[1][i+1]-1: #jeśli joker na końcu serii
                             try:
-                                sum_of_tiles+= own_tiles[i-1].numer-(own_tiles[i-2].numer - own_tiles[i-1].numer)
+                                if own_tiles[i - 1].is_joker:
+                                    sum_of_tiles+= own_tiles[i-2].numer
+                                elif own_tiles[i-2].is_joker:
+                                    sum_of_tiles+= own_tiles[i-1].numer
+                                else:
+                                    sum_of_tiles+= own_tiles[i-1].numer-(own_tiles[i-2].numer - own_tiles[i-1].numer)
                             except:
-                                print("coś nie halo")
+                                #print("coś nie halo")
+                                pass
 
                 #print(sum_of_tiles)
                 #self.logger.log(str(self.players[self.current_player_index].name) + " położył kombinację o wartości "+ str(sum_of_tiles))
@@ -253,7 +270,7 @@ class Board(QGraphicsScene):
                 #print(self.timed_out)
             elif not self.check_move(self.board) and not self.timed_out:
                 #print("ruch nieprawidłowy")
-                self.logger.error(str(self.players[self.current_player_index].name) + "- ruch nieprawidłowy!")
+                self.logger.error(str(self.players[self.current_player_index].name) + " - ruch nieprawidłowy!")
                 #print(self.timed_out)
 
 
@@ -262,6 +279,7 @@ class Board(QGraphicsScene):
             #print("youp")
             for group in self.groups:
                 non_joker = np.sum([not til.is_joker for til in group])
+                #print(non_joker)
                 if(non_joker <= 1):
                     self.logger.log(str(self.players[self.current_player_index].name) + "- kombinacja z dominacją jokerów")
                     #pass
@@ -403,6 +421,7 @@ class Board(QGraphicsScene):
                       for colour in self.colours
                       for numer in range(1, 14)
                       for i in range(2)]
+
         self.tiles += [Tile(Qt.black, 0, is_joker=True),
                        Tile(Qt.red, 0, is_joker=True)]
         random.shuffle(self.tiles)
@@ -454,54 +473,38 @@ class Board(QGraphicsScene):
                        right_indices[:, 0][i], right_indices[:, 1][i] + 3].colour != tile.colour)):
                        possible_moves.append((right_indices[i]))
                 for i in range(len(left_indices)):
-                   if (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour)) and (self.board[left_indices[:, 0][i], left_indices[:, 1][i] -2].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour)):
-                       possible_moves.append((left_indices[i]))
-                   elif (self.board[right_indices[:, 0][i], right_indices[:, 1][i] - 2].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour)) and (self.board[left_indices[:, 0][i], left_indices[:, 1][i] -2].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour)) and (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3] == None or self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3].numer == tile.numer and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 3].colour != tile.colour)):
-                       possible_moves.append((left_indices[i]))
+                    if (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (
+                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and
+                            self.board[
+                                left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour)) and (
+                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].is_joker or (
+                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and
+                            self.board[
+                                left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour)):
+                        possible_moves.append((left_indices[i]))
+                    elif (self.board[right_indices[:, 0][i], right_indices[:, 1][i] - 1].is_joker or (
+                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and
+                            self.board[
+                                left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour)) and (
+                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].is_joker or (
+                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and
+                            self.board[
+                                left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour)) and (
+                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3] == None or self.board[
+                        left_indices[:, 0][i], left_indices[:, 1][i] - 3].is_joker or (
+                                    self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3].numer == tile.numer and
+                                    self.board[
+                                        left_indices[:, 0][i], left_indices[:, 1][i] - 3].colour != tile.colour)):
+                        possible_moves.append((left_indices[i]))
+
+
             except:
                 pass
 
             #indices = np.concatenate((left_indices, right_indices))
         return possible_moves
 
-    # def mousePressEvent(self, event):
-    #     # Znajdowanie klocka, który został kliknięty
-    #     item = self.itemAt(event.scenePos(), QTransform())
-    #
-    #     if isinstance(item, Tile):
-    #         self.drag_tile = item
-    #         self.snap_rect = QGraphicsRectItem(
-    #             QRectF(self.snap_to_grid(event.scenePos()), QSizeF(self.tile_width, self.tile_height)))
-    #         self.snap_rect.setBrush(QBrush(QColor(Qt.white)))
-    #         self.snap_rect.setOpacity(0.5)
-    #         self.addItem(self.snap_rect)
-    #
-    #         if self.drag_tile in self.board:
-    #             pos = self.drag_tile.pos()
-    #             row = int(pos.y() / self.tile_height)
-    #             col = int(pos.x() / self.tile_width)
-    #             self.board[row, col] = None
-    #         if self.drag_tile in self.selected_tiles:
-    #             for tile in self.selected_tiles:
-    #                 pos_til = tile.pos()
-    #                 self.mouse_offsets.append(pos_til - self.drag_tile.pos())
-    #                 if tile in self.board:
-    #                     row = int(pos_til.y() / self.tile_height)
-    #                     col = int(pos_til.x() / self.tile_width)
-    #                     self.board[row, col] = None
-    #
-    #     else:
-    #         self.selected_tiles = []
-    #         self.mouse_offsets = []
-    #         self.selection_start_pos = event.scenePos()
-    #         self.selection_rect = QGraphicsRectItem()
-    #         self.selection_rect.setPen(QPen(Qt.black, 2, Qt.DotLine))
-    #         self.addItem(self.selection_rect)
+
 
     def mousePressEvent(self, event):
         # Znajdowanie klocka, który został kliknięty
