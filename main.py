@@ -471,7 +471,23 @@ class Board(QGraphicsScene):
         mask = (self.board[:, 1:] != None) & (self.board[:, :-1] == None)
         right_indices = np.column_stack(np.where(mask))
         if tile.is_joker:
-            possible_moves = np.concatenate((left_indices, right_indices))
+            #jeśli nam nie zależy na idealnym podświetlaniu ruchu, to można odkomentować tą linijkę i zakomentować całą resztę tego ifa
+            # possible_moves = np.concatenate((left_indices, right_indices))
+            left_mask = np.zeros(len(left_indices), dtype=bool)
+            for i, idx in enumerate(left_indices):
+                left_tile = self.board[idx[0], idx[1] - 1]
+                if left_tile is not None and left_tile.numer < 13:
+                    left_mask[i] = True
+            possible_left_indices = left_indices[left_mask]
+
+            right_mask = np.zeros(len(right_indices), dtype=bool)
+            for i, idx in enumerate(right_indices):
+                right_tile = self.board[idx[0], idx[1] + 1]
+                if right_tile is not None and right_tile.numer > 2:
+                    right_mask[i] = True
+            possible_right_indices = right_indices[right_mask]
+
+            possible_moves = np.concatenate((possible_left_indices, possible_right_indices))
         else:
             for i in range(len(right_indices)):
                 if self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1] != None and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2] !=None:
