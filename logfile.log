@@ -1,27 +1,5 @@
-2023-04-03 14:16:20,361 - INFO - Pocz¹tek gry
-2023-04-03 14:16:26,189 - INFO - Player1 dobra³ klocek
-2023-04-03 14:16:26,339 - INFO - Player2 dobra³ klocek
-2023-04-03 14:16:26,498 - INFO - Player3 dobra³ klocek
-2023-04-03 14:16:26,657 - INFO - Player4 dobra³ klocek
-2023-04-03 14:16:26,814 - INFO - Player1 dobra³ klocek
-2023-04-03 14:16:26,962 - INFO - Player2 dobra³ klocek
-2023-04-03 14:16:27,129 - INFO - Player3 dobra³ klocek
-2023-04-03 14:16:27,289 - INFO - Player4 dobra³ klocek
-2023-04-03 14:16:27,447 - INFO - Player1 dobra³ klocek
-2023-04-03 14:16:27,585 - INFO - Player2 dobra³ klocek
-2023-04-03 14:16:27,748 - INFO - Player3 dobra³ klocek
-2023-04-03 14:16:27,901 - INFO - Player4 dobra³ klocek
-2023-04-03 14:16:28,054 - INFO - Player1 dobra³ klocek
-2023-04-03 14:16:28,207 - INFO - Player2 dobra³ klocek
-2023-04-03 14:16:28,386 - INFO - Player3 dobra³ klocek
-2023-04-03 14:16:28,554 - INFO - Player4 dobra³ klocek
-2023-04-03 14:16:28,714 - INFO - Player1 dobra³ klocek
-2023-04-03 14:16:28,874 - INFO - Player2 dobra³ klocek
-2023-04-03 14:16:29,031 - INFO - Player3 dobra³ klocek
-2023-04-03 14:16:29,199 - INFO - Player4 dobra³ klocek
-2023-04-03 14:16:29,362 - INFO - Player1 dobra³ klocek
-2023-04-03 14:16:29,543 - INFO - Player2 dobra³ klocek
-2023-04-03 14:16:29,717 - INFO - Player3 dobra³ klocek
-2023-04-03 14:16:29,872 - INFO - Player4 dobra³ klocek
-2023-04-03 14:16:30,043 - INFO - Player1 dobra³ klocek
-2023-04-03 14:16:30,267 - INFO - Player2 dobra³ klocek
+2023-04-03 16:38:27,335 - INFO - Pocz¹tek gry
+2023-04-03 16:38:37,895 - INFO - Player1 - kombinacja tych samych cyfr
+2023-04-03 16:38:37,898 - INFO - Player1 - kombinacja tych samych cyfr
+2023-04-03 16:38:37,899 - WARNING - [B£¥D] Player1 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 28. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
+

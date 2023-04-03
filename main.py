@@ -435,6 +435,16 @@ class Board(QGraphicsScene):
         # Obliczenie pozycji klocka na siatce
         ind_x = int(round(pos.x() / self.tile_width))
         ind_y = int(round(pos.y() / self.tile_height))
+        max_index_x = int(self.width()/self.tile_width)
+        max_index_y = int(self.width()/self.tile_width)
+        if ind_x > max_index_x - 10:
+            ind_x = max_index_x - 10
+        elif ind_x < 0:
+            ind_x = - ind_x
+        if ind_y > max_index_y - 10:
+            ind_y = max_index_y - 10
+        elif ind_y < 0:
+            ind_y = -ind_y
         while self.board[ind_y, ind_x] is not None: #jak użytkownik chce położyć swój klocek na już istniejący, to zostaje on przestawiony w prawo
             ind_x+=1
         x = ind_x * self.tile_width
@@ -463,8 +473,9 @@ class Board(QGraphicsScene):
         if tile.is_joker:
             possible_moves = np.concatenate((left_indices, right_indices))
         else:
-            try:
-                for i in range (len(right_indices)):
+            for i in range(len(right_indices)):
+                if self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1] != None and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2] !=None:
+
                    if (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 1].colour == tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 2].colour == tile.colour)):
                        possible_moves.append((right_indices[i]))
                    elif (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and self.board[
@@ -472,7 +483,9 @@ class Board(QGraphicsScene):
                        right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3] == None or self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3].numer == tile.numer and self.board[
                        right_indices[:, 0][i], right_indices[:, 1][i] + 3].colour != tile.colour)):
                        possible_moves.append((right_indices[i]))
-                for i in range(len(left_indices)):
+            for i in range(len(left_indices)):
+                if self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1] != None and self.board[
+                    left_indices[:, 0][i], left_indices[:, 1][i] - 2] != None:
                     if (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (
                             self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and
                             self.board[
@@ -482,7 +495,7 @@ class Board(QGraphicsScene):
                             self.board[
                                 left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour)):
                         possible_moves.append((left_indices[i]))
-                    elif (self.board[right_indices[:, 0][i], right_indices[:, 1][i] - 1].is_joker or (
+                    elif (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (
                             self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and
                             self.board[
                                 left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour)) and (
@@ -498,8 +511,8 @@ class Board(QGraphicsScene):
                         possible_moves.append((left_indices[i]))
 
 
-            except:
-                pass
+
+
 
             #indices = np.concatenate((left_indices, right_indices))
         return possible_moves

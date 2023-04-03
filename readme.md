@@ -1,6 +1,6 @@
 # Instrukcja
 Lewy dolny róg: wskazanie gracza, który aktualnie ma ruch
-- kolor czerwony - aktualny graczy
+- kolor czerwony - aktualny gracz
 - kolor biały - reszta graczy 
 
 Zasady Rummikuba są zachowane, więc przy pierwszym ruchu trzeba wyłożyć kafelki o łącznej wartości >= 30 (bez użycia kafelków obecnych na planszy) 
