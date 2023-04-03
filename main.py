@@ -30,15 +30,15 @@ class Board(QGraphicsScene):
         self.board = np.full((15, 40), None, dtype=object)
         self.board_prev = self.board.copy()
         self.groups = []
-        self.colours = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
+        self.colours = [Qt.red, Qt.blue, Qt.darkYellow, Qt.black]
         self.players = players
         self.current_player_index = 0
         self.red_rects = []
 
-        self.width = 50
-        self.height = 80
-        self.foreground_item = ForegroundItem(self.width * 20, self.height * 2)
-        self.foreground_item.setPos(self.sceneRect().width() / 2 - self.width * 20 / 2, int(round((self.sceneRect().height() - self.height * 2)/self.height))*self.height)
+        self.tile_width = Tile.width
+        self.tile_height = Tile.height
+        self.foreground_item = ForegroundItem(self.tile_width * 20, self.tile_height * 2)
+        self.foreground_item.setPos(self.sceneRect().width() / 2 - self.tile_width * 20 / 2, int(round((self.sceneRect().height() - self.tile_height * 2)/self.tile_height))*self.tile_height)
         self.addItem(self.foreground_item)
 
         self.selection_rect = None
@@ -73,9 +73,10 @@ class Board(QGraphicsScene):
 
         self.generate_tiles()
         self.logger.log('Początek gry')
+        #umieszczenie kafelków gracza
         for i, tile in enumerate(self.players[self.current_player_index].tiles):
             tile.setPos(self.foreground_item.pos() + QPointF(
-                (i % 20) * self.width, int(i / 20) * self.height))
+                (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
             self.addItem(tile)
 
         self.timed_out = False
@@ -128,10 +129,9 @@ class Board(QGraphicsScene):
         # Dodanie klocków następnego gracza
         for i, tile in enumerate(self.players[self.current_player_index].tiles):
             tile.setPos(self.foreground_item.pos() + QPointF(
-                (i % 20) * self.width, int(i / 20) * self.height))
+                (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
             self.addItem(tile)
 
-        # update player name items to highlight current player
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
         self.restart_timer()
 
@@ -289,7 +289,7 @@ class Board(QGraphicsScene):
                             #print("te same cyfr")
                             self.logger.log(
                                 str(self.players[
-                                        self.current_player_index].name) + "- kombinacja tych samych cyfr")
+                                        self.current_player_index].name) + " - kombinacja tych samych cyfr")
                         else:
                             #print("źle")
                             return False
@@ -350,39 +350,52 @@ class Board(QGraphicsScene):
         return True
 
     def sort_tiles_by_color(self):
-        colors = [Qt.red, Qt.blue, QColor(254, 176, 0), Qt.black]
+        colors = self.colours
         #self.user_tiles = sorted(self.user_tiles, key=lambda tile: colors.index(tile.colour))
         self.players[self.current_player_index].tiles = sorted(self.players[self.current_player_index].tiles, key=lambda tile: colors.index(tile.colour))
 
         for index, tile in enumerate(self.players[self.current_player_index].tiles):
-            tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.width,
-                                                             int(index / 20) * self.height))
+            tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.tile_width,
+                                                             int(index / 20) * self.tile_height))
 
     def sort_tiles_by_number(self):
         self.players[self.current_player_index].tiles = sorted(self.players[self.current_player_index].tiles, key=lambda tile: tile.numer)
 
         for index, tile in enumerate(self.players[self.current_player_index].tiles):
-            tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.width,
-                                                             int(index / 20) * self.height))
+            tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.tile_width,
+                                                             int(index / 20) * self.tile_height))
 
     def draw_tile(self):
-        self.board = self.board_prev.copy()
-        self.players[self.current_player_index].tiles = self.players[
-            self.current_player_index].tiles_prev.copy()
-        tile = self.tiles.pop()
-        #self.user_tiles.append(tile)
-        self.players[self.current_player_index].add_tile(tile)
-        tile.setPos(self.foreground_item.pos() + QPointF(((len(self.players[self.current_player_index].tiles) - 1) % 20) * self.width,
-                                                         int((len(self.players[self.current_player_index].tiles) - 1) / 20) * self.height))
-        self.board_prev = self.board.copy()
-        self.players[self.current_player_index].tiles_prev = self.players[
-            self.current_player_index].tiles.copy()
-        #self.addItem(tile)
-        self.logger.log(str(self.players[self.current_player_index].name) + " dobrał klocek")
-        self.switch_player()
-        #print(self.board)
-        #print(self.board_prev)
-        self.refresh_board()
+        if len(self.tiles) > 0:
+            self.board = self.board_prev.copy()
+            self.players[self.current_player_index].tiles = self.players[
+                self.current_player_index].tiles_prev.copy()
+            tile = self.tiles.pop()
+            #self.user_tiles.append(tile)
+            self.players[self.current_player_index].add_tile(tile)
+            tile.setPos(self.foreground_item.pos() + QPointF(((len(self.players[self.current_player_index].tiles) - 1) % 20) * self.tile_width,
+                                                             int((len(self.players[self.current_player_index].tiles) - 1) / 20) * self.tile_height))
+            self.board_prev = self.board.copy()
+            self.players[self.current_player_index].tiles_prev = self.players[
+                self.current_player_index].tiles.copy()
+            #self.addItem(tile)
+            self.logger.log(str(self.players[self.current_player_index].name) + " dobrał klocek")
+            self.switch_player()
+            #print(self.board)
+            #print(self.board_prev)
+            self.refresh_board()
+        else:
+            # to na wypadek rzadkiej sytuacji kiedy zabraknie klocków do dobrania
+            min_player = min(self.players, key=lambda player: len(player.tiles))
+            self.logger.error("Nie można dobrać więcej klocków! Koniec gry!")
+            self.logger.log("Wygrywa " + min_player.name)
+            msg_box = QMessageBox()
+            msg_box.setText("Nie można dobrać więcej klocków! Koniec gry! \n Wygrywa " + min_player.name)
+            msg_box.setWindowTitle("Message Box")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+
+            response = msg_box.exec_()
+            sys.exit(app.exec_())
 
     def generate_tiles(self):
         # Generowanie klocków
@@ -401,12 +414,12 @@ class Board(QGraphicsScene):
 
     def snap_to_grid(self, pos):
         # Obliczenie pozycji klocka na siatce
-        ind_x = int(round(pos.x() / self.width))
-        ind_y = int(round(pos.y() / self.height))
+        ind_x = int(round(pos.x() / self.tile_width))
+        ind_y = int(round(pos.y() / self.tile_height))
         while self.board[ind_y, ind_x] is not None: #jak użytkownik chce położyć swój klocek na już istniejący, to zostaje on przestawiony w prawo
             ind_x+=1
-        x = ind_x * self.width
-        y = ind_y * self.height
+        x = ind_x * self.tile_width
+        y = ind_y * self.tile_height
         return QPointF(x, y)
 
     def refresh_board(self):
@@ -433,20 +446,22 @@ class Board(QGraphicsScene):
         else:
             try:
                 for i in range (len(right_indices)):
-                   if self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 1].colour == tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 2].colour == tile.colour:
+                   if (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 1].colour == tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 2].colour == tile.colour)):
                        possible_moves.append((right_indices[i]))
-                   elif self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and self.board[
-                       right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour != tile.colour and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer and self.board[
-                       right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour:
+                   elif (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and self.board[
+                       right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour != tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer and self.board[
+                       right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3] == None or self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3].numer == tile.numer and self.board[
+                       right_indices[:, 0][i], right_indices[:, 1][i] + 3].colour != tile.colour)):
                        possible_moves.append((right_indices[i]))
                 for i in range(len(left_indices)):
-                   if self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour:
+                   if (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour)) and (self.board[left_indices[:, 0][i], left_indices[:, 1][i] -2].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour)):
                        possible_moves.append((left_indices[i]))
-                   elif self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour and self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and self.board[
-                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour:
+                   elif (self.board[right_indices[:, 0][i], right_indices[:, 1][i] - 2].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour)) and (self.board[left_indices[:, 0][i], left_indices[:, 1][i] -2].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour)) and (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3] == None or self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3].is_joker or (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3].numer == tile.numer and self.board[
+                       left_indices[:, 0][i], left_indices[:, 1][i] - 3].colour != tile.colour)):
                        possible_moves.append((left_indices[i]))
             except:
                 pass
@@ -461,23 +476,23 @@ class Board(QGraphicsScene):
     #     if isinstance(item, Tile):
     #         self.drag_tile = item
     #         self.snap_rect = QGraphicsRectItem(
-    #             QRectF(self.snap_to_grid(event.scenePos()), QSizeF(self.width, self.height)))
+    #             QRectF(self.snap_to_grid(event.scenePos()), QSizeF(self.tile_width, self.tile_height)))
     #         self.snap_rect.setBrush(QBrush(QColor(Qt.white)))
     #         self.snap_rect.setOpacity(0.5)
     #         self.addItem(self.snap_rect)
     #
     #         if self.drag_tile in self.board:
     #             pos = self.drag_tile.pos()
-    #             row = int(pos.y() / self.height)
-    #             col = int(pos.x() / self.width)
+    #             row = int(pos.y() / self.tile_height)
+    #             col = int(pos.x() / self.tile_width)
     #             self.board[row, col] = None
     #         if self.drag_tile in self.selected_tiles:
     #             for tile in self.selected_tiles:
     #                 pos_til = tile.pos()
     #                 self.mouse_offsets.append(pos_til - self.drag_tile.pos())
     #                 if tile in self.board:
-    #                     row = int(pos_til.y() / self.height)
-    #                     col = int(pos_til.x() / self.width)
+    #                     row = int(pos_til.y() / self.tile_height)
+    #                     col = int(pos_til.x() / self.tile_width)
     #                     self.board[row, col] = None
     #
     #     else:
@@ -495,33 +510,31 @@ class Board(QGraphicsScene):
         if isinstance(item, Tile):
             self.drag_tile = item
             self.snap_rect = QGraphicsRectItem(
-                QRectF(self.snap_to_grid(event.scenePos()), QSizeF(self.width, self.height)))
+                QRectF(self.snap_to_grid(event.scenePos()), QSizeF(self.tile_width, self.tile_height)))
             self.snap_rect.setBrush(QBrush(QColor(Qt.white)))
             self.snap_rect.setOpacity(0.5)
             self.addItem(self.snap_rect)
 
             if self.drag_tile in self.board:
                 pos = self.drag_tile.pos()
-                row = int(pos.y() / self.height)
-                col = int(pos.x() / self.width)
+                row = int(pos.y() / self.tile_height)
+                col = int(pos.x() / self.tile_width)
                 self.board[row, col] = None
             if self.drag_tile in self.selected_tiles:
                 for tile in self.selected_tiles:
                     pos_til = tile.pos()
                     self.mouse_offsets.append(pos_til - self.drag_tile.pos())
                     if tile in self.board:
-                        row = int(pos_til.y() / self.height)
-                        col = int(pos_til.x() / self.width)
+                        row = int(pos_til.y() / self.tile_height)
+                        col = int(pos_til.x() / self.tile_width)
                         self.board[row, col] = None
 
-            # Get possible movements for the clicked tile
             possible_moves = self.possible_movements(self.drag_tile)
 
-            # Draw red rectangles at positions corresponding to possible movements
             if len(possible_moves) > 0:
                 for move in possible_moves:
-                    x, y = move[1] * self.width, move[0] * self.height
-                    rect = QGraphicsRectItem(QRectF(x, y, self.width, self.height))
+                    x, y = move[1] * self.tile_width, move[0] * self.tile_height
+                    rect = QGraphicsRectItem(QRectF(x, y, self.tile_width, self.tile_height))
                     rect.setBrush(QBrush(QColor(Qt.red)))
                     rect.setOpacity(0.5)
                     rect.setZValue(-1)
@@ -542,7 +555,7 @@ class Board(QGraphicsScene):
         if hasattr(self, 'drag_tile') and self.drag_tile is not None:
             if self.snap_rect is not None:
                 snap_pos = self.snap_to_grid(event.scenePos() - self.drag_tile.boundingRect().center())
-                self.snap_rect.setRect(QRectF(snap_pos, QSizeF(self.width, self.height)))
+                self.snap_rect.setRect(QRectF(snap_pos, QSizeF(self.tile_width, self.tile_height)))
                 self.snap_rect.setZValue(-1)
             if not self.drag_tile in self.selected_tiles:
                 pos = event.scenePos() - self.drag_tile.boundingRect().center()
@@ -567,8 +580,8 @@ class Board(QGraphicsScene):
 
             if not self.drag_tile in self.selected_tiles:
                 pos = self.snap_to_grid(self.drag_tile.pos())
-                row = int(pos.y() / self.height)
-                col = int(pos.x() / self.width)
+                row = int(pos.y() / self.tile_height)
+                col = int(pos.x() / self.tile_width)
                 if self.drag_tile in self.players[self.current_player_index].tiles and row < 10: #z pulpitu na planszę
                     #
                     self.board[row, col] = self.drag_tile
@@ -579,8 +592,8 @@ class Board(QGraphicsScene):
                 elif self.drag_tile not in self.players[self.current_player_index].tiles and row >= 10 and not self.drag_tile in self.players[self.current_player_index].tiles_prev: #wzięcie nieswojego klocka
                     #print("Nie można przeciągać nieswojego klocka na pulpit!")
                     self.logger.error(str(self.players[self.current_player_index].name) + " podjął próbę kradzieży nieswojego klocka!")
-                    pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.width * 20 / 2, int(
-                        round((self.sceneRect().height() - self.height * 2) / self.height)) * self.height))
+                    pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.tile_width * 20 / 2, int(
+                        round((self.sceneRect().height() - self.tile_height * 2) / self.tile_height)) * self.tile_height))
                 elif self.drag_tile not in self.players[self.current_player_index].tiles and row < 10: #zmiana pozycji na planszy
                     self.board[row, col] = self.drag_tile
                 self.drag_tile.setPos(pos)
@@ -588,8 +601,8 @@ class Board(QGraphicsScene):
                 for interval, tile in enumerate(self.selected_tiles):
                     pos = self.snap_to_grid(tile.pos())
 
-                    row = int(pos.y() / self.height)
-                    col = int(pos.x() / self.width)
+                    row = int(pos.y() / self.tile_height)
+                    col = int(pos.x() / self.tile_width)
                     if tile in self.players[self.current_player_index].tiles and row < 10:
 
                         self.board[row, col] = tile
@@ -603,8 +616,8 @@ class Board(QGraphicsScene):
                         #print("Nie można przeciągać nieswojego klocka na pulpit!")
                         self.logger.error(str(self.players[
                                                   self.current_player_index].name) + " podjął próbę kradzieży nieswojego klocka!")
-                        pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.width * 20 / 2 + interval*self.width, int(
-                            round((self.sceneRect().height() - self.height * 2) / self.height)) * self.height))
+                        pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.tile_width * 20 / 2 + interval*self.tile_width, int(
+                            round((self.sceneRect().height() - self.tile_height * 2) / self.tile_height)) * self.tile_height))
                     elif tile not in self.players[self.current_player_index].tiles and row < 10:
                         self.board[row, col] = tile
                     tile.setPos(pos)

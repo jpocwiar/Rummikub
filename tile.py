@@ -4,10 +4,11 @@ from PySide2.QtCore import *
 
 
 class Tile(QGraphicsItem):
+    width = 50
+    height = 80
     def __init__(self, colour, numer, is_joker=False):
         super().__init__()
-        self.width = 50
-        self.height = 80
+
         self.rect = QRectF(0, 0, self.width, self.height)
         self.colour = colour
         self.numer = numer

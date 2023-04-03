@@ -1,86 +1,23 @@
-2023-04-02 23:01:50,256 - INFO - Pocz¹tek gry
-2023-04-02 23:01:55,564 - INFO - Player1 dobra³ klocek
-2023-04-02 23:01:55,709 - INFO - Player2 dobra³ klocek
-2023-04-02 23:01:55,849 - INFO - Player3 dobra³ klocek
-2023-04-02 23:01:56,007 - INFO - Player4 dobra³ klocek
-2023-04-02 23:01:56,464 - INFO - Player1 dobra³ klocek
-2023-04-02 23:01:56,611 - INFO - Player2 dobra³ klocek
-2023-04-02 23:01:56,763 - INFO - Player3 dobra³ klocek
-2023-04-02 23:01:56,923 - INFO - Player4 dobra³ klocek
-2023-04-02 23:01:57,079 - INFO - Player1 dobra³ klocek
-2023-04-02 23:01:57,238 - INFO - Player2 dobra³ klocek
-2023-04-02 23:01:57,392 - INFO - Player3 dobra³ klocek
-2023-04-02 23:01:57,557 - INFO - Player4 dobra³ klocek
-2023-04-02 23:01:57,714 - INFO - Player1 dobra³ klocek
-2023-04-02 23:01:57,866 - INFO - Player2 dobra³ klocek
-2023-04-02 23:01:58,025 - INFO - Player3 dobra³ klocek
-2023-04-02 23:01:58,187 - INFO - Player4 dobra³ klocek
-2023-04-02 23:01:58,347 - INFO - Player1 dobra³ klocek
-2023-04-02 23:01:58,506 - INFO - Player2 dobra³ klocek
-2023-04-02 23:01:58,669 - INFO - Player3 dobra³ klocek
-2023-04-02 23:01:58,830 - INFO - Player4 dobra³ klocek
-2023-04-02 23:01:58,990 - INFO - Player1 dobra³ klocek
-2023-04-02 23:01:59,156 - INFO - Player2 dobra³ klocek
-2023-04-02 23:01:59,323 - INFO - Player3 dobra³ klocek
-2023-04-02 23:01:59,495 - INFO - Player4 dobra³ klocek
-2023-04-02 23:01:59,665 - INFO - Player1 dobra³ klocek
-2023-04-02 23:01:59,822 - INFO - Player2 dobra³ klocek
-2023-04-02 23:01:59,988 - INFO - Player3 dobra³ klocek
-2023-04-02 23:02:00,151 - INFO - Player4 dobra³ klocek
-2023-04-02 23:02:00,312 - INFO - Player1 dobra³ klocek
-2023-04-02 23:02:00,482 - INFO - Player2 dobra³ klocek
-2023-04-02 23:02:00,649 - INFO - Player3 dobra³ klocek
-2023-04-02 23:02:00,822 - INFO - Player4 dobra³ klocek
-2023-04-02 23:02:00,987 - INFO - Player1 dobra³ klocek
-2023-04-02 23:02:01,142 - INFO - Player2 dobra³ klocek
-2023-04-02 23:02:01,315 - INFO - Player3 dobra³ klocek
-2023-04-02 23:02:01,489 - INFO - Player4 dobra³ klocek
-2023-04-02 23:02:01,656 - INFO - Player1 dobra³ klocek
-2023-04-02 23:02:01,814 - INFO - Player2 dobra³ klocek
-2023-04-02 23:02:01,980 - INFO - Player3 dobra³ klocek
-2023-04-02 23:02:02,144 - INFO - Player4 dobra³ klocek
-2023-04-02 23:02:02,299 - INFO - Player1 dobra³ klocek
-2023-04-02 23:02:09,581 - INFO - Player2- kombinacja tych samych cyfr
-2023-04-02 23:02:09,582 - INFO - Player2 po³o¿y³ kombinacjê o wartoœci 32
-2023-04-02 23:02:20,516 - INFO - Player3- kombinacja jeden kolor, po kolei
-2023-04-02 23:02:20,517 - INFO - Player3 po³o¿y³ kombinacjê o wartoœci 36
-2023-04-02 23:02:25,180 - INFO - Player4- kombinacja tych samych cyfr
-2023-04-02 23:02:25,180 - INFO - Player4- kombinacja tych samych cyfr
-2023-04-02 23:02:25,180 - WARNING - [B£¥D] Player4 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 18. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
+2023-04-03 09:59:13,120 - INFO - Pocz¹tek gry
+2023-04-03 09:59:27,236 - INFO - Player1 dobra³ klocek
+2023-04-03 09:59:27,398 - INFO - Player2 dobra³ klocek
+2023-04-03 09:59:27,538 - INFO - Player3 dobra³ klocek
+2023-04-03 09:59:27,697 - INFO - Player4 dobra³ klocek
+2023-04-03 09:59:27,848 - INFO - Player1 dobra³ klocek
+2023-04-03 09:59:27,983 - INFO - Player2 dobra³ klocek
+2023-04-03 09:59:28,136 - INFO - Player3 dobra³ klocek
+2023-04-03 09:59:28,264 - INFO - Player4 dobra³ klocek
+2023-04-03 09:59:28,417 - INFO - Player1 dobra³ klocek
+2023-04-03 09:59:28,576 - INFO - Player2 dobra³ klocek
+2023-04-03 09:59:28,731 - INFO - Player3 dobra³ klocek
+2023-04-03 09:59:28,888 - INFO - Player4 dobra³ klocek
+2023-04-03 09:59:29,052 - INFO - Player1 dobra³ klocek
+2023-04-03 09:59:29,213 - INFO - Player2 dobra³ klocek
+2023-04-03 09:59:29,430 - INFO - Player3 dobra³ klocek
+2023-04-03 09:59:50,695 - INFO - Player4 dobra³ klocek
+2023-04-03 10:00:08,767 - INFO - Player1 - kombinacja tych samych cyfr
+2023-04-03 10:00:08,769 - INFO - Player1 po³o¿y³ kombinacjê o wartoœci 39
+2023-04-03 10:00:27,426 - INFO - Player2 - kombinacja tych samych cyfr
+2023-04-03 10:00:27,427 - INFO - Player2 - kombinacja tych samych cyfr
+2023-04-03 10:00:27,429 - WARNING - [B£¥D] Player2 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 20. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
 
-2023-04-02 23:02:33,527 - INFO - Player4- kombinacja tych samych cyfr
-2023-04-02 23:02:33,528 - INFO - Player4- kombinacja jeden kolor, po kolei
-2023-04-02 23:02:33,529 - INFO - Player4- kombinacja tych samych cyfr
-2023-04-02 23:02:33,529 - INFO - Player4- kombinacja jeden kolor, po kolei
-2023-04-02 23:02:33,530 - WARNING - [B£¥D] Player4 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 27. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
-
-2023-04-02 23:02:41,903 - INFO - Player4- kombinacja tych samych cyfr
-2023-04-02 23:02:41,904 - INFO - Player4- kombinacja jeden kolor, po kolei
-2023-04-02 23:02:41,904 - INFO - Player4- kombinacja jeden kolor, po kolei
-2023-04-02 23:02:41,905 - INFO - Player4 po³o¿y³ kombinacjê o wartoœci 51
-2023-04-02 23:02:49,551 - INFO - Player1- kombinacja tych samych cyfr
-2023-04-02 23:02:49,552 - INFO - Player1 po³o¿y³ kombinacjê o wartoœci 39
-2023-04-02 23:03:14,536 - INFO - Player2- kombinacja tych samych cyfr
-2023-04-02 23:03:14,537 - INFO - Player2- kombinacja tych samych cyfr
-2023-04-02 23:03:14,538 - INFO - Player2- kombinacja tych samych cyfr
-2023-04-02 23:03:14,538 - INFO - Player2- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:14,538 - INFO - Player2- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:14,539 - INFO - Player2- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:14,539 - INFO - Player2 wykona³ prawid³owy ruch i zosta³o mu 17 klocków
-2023-04-02 23:03:27,656 - INFO - Player3- kombinacja tych samych cyfr
-2023-04-02 23:03:27,656 - INFO - Player3- kombinacja tych samych cyfr
-2023-04-02 23:03:27,656 - INFO - Player3- kombinacja tych samych cyfr
-2023-04-02 23:03:27,657 - INFO - Player3- kombinacja tych samych cyfr
-2023-04-02 23:03:27,657 - INFO - Player3- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:27,657 - INFO - Player3- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:27,658 - INFO - Player3- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:27,658 - INFO - Player3 wykona³ prawid³owy ruch i zosta³o mu 19 klocków
-2023-04-02 23:03:44,515 - INFO - Player4 dobra³ klocek
-2023-04-02 23:03:52,930 - INFO - Player1- kombinacja tych samych cyfr
-2023-04-02 23:03:52,930 - INFO - Player1- kombinacja tych samych cyfr
-2023-04-02 23:03:52,931 - INFO - Player1- kombinacja tych samych cyfr
-2023-04-02 23:03:52,931 - INFO - Player1- kombinacja tych samych cyfr
-2023-04-02 23:03:52,931 - INFO - Player1- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:52,932 - INFO - Player1- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:52,932 - INFO - Player1- kombinacja jeden kolor, po kolei
-2023-04-02 23:03:52,933 - INFO - Player1 wykona³ prawid³owy ruch i zosta³o mu 21 klocków
