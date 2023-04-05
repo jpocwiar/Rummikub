@@ -196,7 +196,7 @@ class Board(QGraphicsScene):
             if len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev) and not self.timed_out:
                 #print("Musisz wykonać ruch!")
-                self.logger.error(str(self.players[self.current_player_index].name) + " nie wykonał ruchu!")
+                self.logger.error(str(self.players[self.current_player_index].name) + " nie wykonał pierwszego ruchu!")
             elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev) and sum_of_tiles >=30:
                 #print("ruch prawidłowy")
@@ -222,14 +222,14 @@ class Board(QGraphicsScene):
                 # przywróć stan poprzedni i przejdź do następnego gracza
                 #print("ruch nieprawidłowy i czas minął!")
                 self.logger.error(
-                    self.players[self.current_player_index].name + " nie wykonał poprawnego ruchu i czas się skończył!")
+                    self.players[self.current_player_index].name + " nie wykonał poprawnego pierwszego ruchu i czas się skończył!")
 
                 self.draw_tile()
                 #print(self.timed_out)
             elif not self.check_move(own_board) and not self.timed_out:
                 #print("ruch nieprawidłowy")
                 self.logger.error(
-                    self.players[self.current_player_index].name + " nie wykonał poprawnego ruchu!")
+                    self.players[self.current_player_index].name + " nie wykonał poprawnego pierwszego ruchu!")
                 # print(self.timed_out)
         #if sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) and not self.timed_out:
         #print("a" + str(len(self.players[self.current_player_index].tiles)))
@@ -292,8 +292,8 @@ class Board(QGraphicsScene):
                         if len(unique_values) == 1 and not unique_values == {0} and not next(iter(unique_values)) + len(group) - 1 >= 14:
                             #print(unique_values)
                             #print("po kolei")
-                            self.logger.log(
-                                str(self.players[self.current_player_index].name) + "- kombinacja jeden kolor, po kolei")
+                            # self.logger.log(
+                            #     str(self.players[self.current_player_index].name) + "- kombinacja jeden kolor, po kolei")
                             pass
                         else:
                             #print("nie po kolei")
@@ -304,15 +304,16 @@ class Board(QGraphicsScene):
                     elif color_count == non_joker and len(group) <= 4:
                         values = set(til.numer for til in group if not til.is_joker)
                         if len(values) == 1:
+                            pass
                             #print("te same cyfr")
-                            self.logger.log(
-                                str(self.players[
-                                        self.current_player_index].name) + " - kombinacja tych samych cyfr")
+                            # self.logger.log(
+                            #     str(self.players[
+                            #             self.current_player_index].name) + " - kombinacja tych samych cyfr")
                         else:
                             #print("źle")
                             return False
                     else:
-                        print("źle")
+                        #print("źle")
                         return False
             return True
         else:
@@ -463,74 +464,116 @@ class Board(QGraphicsScene):
 
     def possible_movements(self, tile):
         possible_moves = []
-        #if not self.players[self.current_player_index].first_move:
-        mask = (self.board[:, :-1] != None) & (self.board[:, 1:] == None)
+        if players[self.current_player_index].first_move:
+            board = np.where(self.board == self.board_prev, None, self.board)
+        else:
+            board = self.board
+        # if not self.players[self.current_player_index].first_move:
+        mask = (board[:, :-1] != None) & (board[:, 1:] == None)
         left_indices = np.column_stack(np.where(mask))
         left_indices[:, 1] += 1
 
-        mask = (self.board[:, 1:] != None) & (self.board[:, :-1] == None)
+        mask = (board[:, 1:] != None) & (board[:, :-1] == None)
         right_indices = np.column_stack(np.where(mask))
         if tile.is_joker:
-            #jeśli nam nie zależy na idealnym podświetlaniu ruchu, to można odkomentować tą linijkę i zakomentować całą resztę tego ifa
+            # jeśli nam nie zależy na idealnym podświetlaniu ruchu, to można odkomentować tą linijkę i zakomentować całą resztę tego ifa
             # possible_moves = np.concatenate((left_indices, right_indices))
             left_mask = np.zeros(len(left_indices), dtype=bool)
             for i, idx in enumerate(left_indices):
-                left_tile = self.board[idx[0], idx[1] - 1]
-                if left_tile is not None and left_tile.numer < 13:
+                left_tile = board[idx[0], idx[1] - 1]
+                left_left_tile = board[idx[0], idx[1] - 2]
+                if left_tile is not None and left_tile.numer < 13 and left_left_tile is not None and (left_left_tile.numer == left_tile.numer - 1 or left_left_tile.is_joker):
+                    left_mask[i] = True
+                elif left_tile is not None and left_left_tile is not None and (left_left_tile.numer == left_tile.numer or left_left_tile.is_joker) and board[idx[0], idx[1] - 4] is None:
                     left_mask[i] = True
             possible_left_indices = left_indices[left_mask]
 
             right_mask = np.zeros(len(right_indices), dtype=bool)
             for i, idx in enumerate(right_indices):
-                right_tile = self.board[idx[0], idx[1] + 1]
-                if right_tile is not None and right_tile.numer > 2:
+                right_tile = board[idx[0], idx[1] + 1]
+                right_right_tile = board[idx[0], idx[1] + 2]
+                if right_tile is not None and right_tile.numer >= 2 and right_right_tile is not None and (right_right_tile.numer == right_tile.numer + 1 or right_right_tile.is_joker):
+                    right_mask[i] = True
+                elif right_tile is not None and right_right_tile is not None and (right_right_tile.numer == right_tile.numer or right_right_tile.is_joker) and board[idx[0], idx[1] + 4] is None:
                     right_mask[i] = True
             possible_right_indices = right_indices[right_mask]
 
             possible_moves = np.concatenate((possible_left_indices, possible_right_indices))
         else:
             for i in range(len(right_indices)):
-                if self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1] != None and self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2] !=None:
+                if board[right_indices[:, 0][i], right_indices[:, 1][i] + 1] != None and board[
+                    right_indices[:, 0][i], right_indices[:, 1][i] + 2] != None:
 
-                   if (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 1].colour == tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and self.board[right_indices[:, 0][i] , right_indices[:, 1][i] + 2].colour == tile.colour)):
-                       possible_moves.append((right_indices[i]))
-                   elif (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and self.board[
-                       right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour != tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer and self.board[
-                       right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour)) and (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3] == None or self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3].is_joker or (self.board[right_indices[:, 0][i], right_indices[:, 1][i] + 3].numer == tile.numer and self.board[
-                       right_indices[:, 0][i], right_indices[:, 1][i] + 3].colour != tile.colour)):
-                       possible_moves.append((right_indices[i]))
+                    if (board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer + 1 and
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour == tile.colour)) and (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].is_joker or (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer + 2 and
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour == tile.colour)) and (
+                            board[
+                                right_indices[:, 0][i], right_indices[:, 1][i] + 3] == None or
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 3].is_joker or  (board[
+                                                                                            right_indices[:, 0][i],
+                                                                                            right_indices[:, 1][
+                                                                                                i] + 3].numer == tile.numer + 3 and
+                                                                                        board[
+                                                                                            right_indices[:, 0][i],
+                                                                                            right_indices[:, 1][
+                                                                                                i] + 3].colour == tile.colour)):
+                        possible_moves.append((right_indices[i]))
+                    elif (board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].is_joker or (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 1].numer == tile.numer and board[
+                        right_indices[:, 0][i], right_indices[:, 1][i] + 1].colour != tile.colour)) and (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].is_joker or (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 2].numer == tile.numer and board[
+                        right_indices[:, 0][i], right_indices[:, 1][i] + 2].colour != tile.colour)) and (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 3] == None or board[
+                        right_indices[:, 0][i], right_indices[:, 1][i] + 3].is_joker or (board[
+                                                                                             right_indices[:, 0][i],
+                                                                                             right_indices[:, 1][
+                                                                                                 i] + 3].numer == tile.numer and
+                                                                                         board[
+                                                                                             right_indices[:, 0][i],
+                                                                                             right_indices[:, 1][
+                                                                                                 i] + 3].colour != tile.colour)) and (
+                            board[right_indices[:, 0][i], right_indices[:, 1][i] + 4] == None):
+                        possible_moves.append((right_indices[i]))
             for i in range(len(left_indices)):
-                if self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1] != None and self.board[
+                if board[left_indices[:, 0][i], left_indices[:, 1][i] - 1] != None and board[
                     left_indices[:, 0][i], left_indices[:, 1][i] - 2] != None:
-                    if (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (
-                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and
-                            self.board[
+                    if (board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer - 1 and
+                            board[
                                 left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour == tile.colour)) and (
-                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].is_joker or (
-                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and
-                            self.board[
-                                left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour)):
-                        possible_moves.append((left_indices[i]))
-                    elif (self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (
-                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and
-                            self.board[
-                                left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour)) and (
-                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].is_joker or (
-                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and
-                            self.board[
-                                left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour)) and (
-                            self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3] == None or self.board[
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].is_joker or (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer - 2 and
+                            board[
+                                left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour == tile.colour)) and (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 3] == None or board[
                         left_indices[:, 0][i], left_indices[:, 1][i] - 3].is_joker or (
-                                    self.board[left_indices[:, 0][i], left_indices[:, 1][i] - 3].numer == tile.numer and
-                                    self.board[
-                                        left_indices[:, 0][i], left_indices[:, 1][i] - 3].colour != tile.colour)):
+                                    board[left_indices[:, 0][i], left_indices[:, 1][
+                                                                     i] - 3].numer == tile.numer - 3 and
+                                    board[
+                                        left_indices[:, 0][i], left_indices[:, 1][i] - 3].colour == tile.colour)):
+                        possible_moves.append((left_indices[i]))
+                    elif (board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].is_joker or (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 1].numer == tile.numer and
+                            board[
+                                left_indices[:, 0][i], left_indices[:, 1][i] - 1].colour != tile.colour)) and (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].is_joker or (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 2].numer == tile.numer and
+                            board[
+                                left_indices[:, 0][i], left_indices[:, 1][i] - 2].colour != tile.colour)) and (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 3] == None or board[
+                        left_indices[:, 0][i], left_indices[:, 1][i] - 3].is_joker or (
+                                    board[left_indices[:, 0][i], left_indices[:, 1][i] - 3].numer == tile.numer and
+                                    board[
+                                        left_indices[:, 0][i], left_indices[:, 1][
+                                                                   i] - 3].colour != tile.colour)) and (
+                            board[left_indices[:, 0][i], left_indices[:, 1][i] - 4] == None):
                         possible_moves.append((left_indices[i]))
 
-
-
-
-
-            #indices = np.concatenate((left_indices, right_indices))
+            # indices = np.concatenate((left_indices, right_indices))
         return possible_moves
 
 
