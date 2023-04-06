@@ -1,13 +1,12 @@
-from PySide2.QtWidgets import *
-from PySide2.QtGui import *
-from PySide2.QtCore import *
-import logging
+from PySide2.QtWidgets import QTextEdit
+from PySide2.QtGui import QColor
 from logging.handlers import RotatingFileHandler
+import logging
 import os
 
-class Logger:
-    def __init__(self, text_edit):
-        self.text_edit = text_edit
+class Logger(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.file_handler = RotatingFileHandler("logfile.log", maxBytes=10000, backupCount=1)
         self.file_handler.setLevel(logging.INFO)
         self.formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -15,7 +14,8 @@ class Logger:
         self.logger = logging.getLogger()
         self.logger.addHandler(self.file_handler)
         self.logger.setLevel(logging.INFO)
-        #self.clear()
+        self.setReadOnly(True)
+        self.clear()
         if os.path.exists("logfile.log"):
             with open("logfile.log", "w"):
                 pass
@@ -23,17 +23,13 @@ class Logger:
     def log(self, message):
         self.logger.info(message)
 
-        self.text_edit.setTextColor(QColor('black'))
-        self.text_edit.append(message)
+        self.setTextColor(QColor('black'))
+        self.append(message)
         print(message)
 
-        # self.text_edit.setTextColor(QColor('black'))
-        # self.text_edit.append(message)
-
     def error(self, message):
-
         self.logger.warning(f'[BŁĄD] {message}\n')
 
-        self.text_edit.setTextColor(QColor('red'))
-        self.text_edit.append(f'[BŁĄD] {message}')
+        self.setTextColor(QColor('red'))
+        self.append(f'[BŁĄD] {message}')
         print("\033[91m[BŁĄD] {}\033[0m".format(message))

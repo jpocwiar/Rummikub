@@ -65,10 +65,9 @@ class Board(QGraphicsScene):
         self.sort_by_number_button.clicked.connect(
         self.sort_tiles_by_number)
 
-        self.text_edit = QTextEdit(view)
-        self.text_edit.setGeometry(1430, 870, 350, 100)
-        self.text_edit.setReadOnly(True)
-        self.logger = Logger(self.text_edit)
+        self.logger = Logger(view)
+        self.logger.setGeometry(1430, 870, 350, 100)
+
         #view.setCornerWidget(self.text_edit)
 
         self.generate_tiles()
