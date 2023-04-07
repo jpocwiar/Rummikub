@@ -1,3 +1,5 @@
+#Jakub Poćwiardowski 184827
+
 from PySide2.QtWidgets import *
 from PySide2.QtGui import *
 from PySide2.QtCore import *
@@ -94,7 +96,7 @@ class Board(QGraphicsScene):
             name_item.setFont(QFont("Arial", 16, QFont.Bold))
             name_item.setDefaultTextColor(QColor(235, 235, 235))
             if i == self.current_player_index:
-                name_item.setDefaultTextColor(QColor(255, 100, 100))  # set current player's name to red
+                name_item.setDefaultTextColor(QColor(255, 100, 100))
             self.addItem(name_item)
             name_item.setPos(50, y)
             self.player_name_items.append(name_item)
@@ -475,7 +477,6 @@ class Board(QGraphicsScene):
         mask = (board[:, 1:] != None) & (board[:, :-1] == None)
         right_indices = np.column_stack(np.where(mask))
         if tile.is_joker:
-            # jeśli nam nie zależy na idealnym podświetlaniu ruchu, to można odkomentować tą linijkę i zakomentować całą resztę tego ifa
             # possible_moves = np.concatenate((left_indices, right_indices))
             left_mask = np.zeros(len(left_indices), dtype=bool)
             for i, idx in enumerate(left_indices):
