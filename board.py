@@ -68,8 +68,6 @@ class Board(QGraphicsScene):
         self.logger = Logger(view)
         self.logger.setGeometry(1430, 870, 350, 100)
 
-        #view.setCornerWidget(self.text_edit)
-
         self.generate_tiles()
         self.logger.log('Początek gry')
         #umieszczenie kafelków gracza
@@ -110,7 +108,6 @@ class Board(QGraphicsScene):
         self.timer.update_time()
 
     def restart_timer(self):
-        #print("hello")
         self.timer.time_left = 30000
         self.timer.update()
         self.timed_out = False
@@ -171,10 +168,6 @@ class Board(QGraphicsScene):
                                 else:
                                     sum_of_tiles+= own_tiles[i+1].numer-(own_tiles[i+2].numer - own_tiles[i+1].numer)
                             except:
-                                # print("coś nie halo0" + str(i))
-                                # print(mask[1][i])
-                                # print(mask[1][i-1])
-                                # print(mask[1][i+1])
                                 pass
                         elif i==len(own_tiles)-1 or mask[1][i]!=mask[1][i+1]-1: #jeśli joker na końcu serii
                             try:
@@ -185,11 +178,8 @@ class Board(QGraphicsScene):
                                 else:
                                     sum_of_tiles+= own_tiles[i-1].numer-(own_tiles[i-2].numer - own_tiles[i-1].numer)
                             except:
-                                #print("coś nie halo")
                                 pass
 
-                #print(sum_of_tiles)
-                #self.logger.log(str(self.players[self.current_player_index].name) + " położył kombinację o wartości "+ str(sum_of_tiles))
 
 
             if len(self.players[self.current_player_index].tiles) == len(
@@ -208,31 +198,21 @@ class Board(QGraphicsScene):
 
                 self.players[self.current_player_index].first_move = False #już nie pierwszy ruch
                 self.switch_player()
-            # elif (not self.check_move() and self.timed_out) or (sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour)) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour)))) and self.timed_out): #przy pierwszym ruchu może robić jakby osobny board? Zęby to 30 sprawdzać
             elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev) and sum_of_tiles < 30 and not self.timed_out:
-                #print("Przy pierwszym ruchu konieczne jest wyłożenie klocków o łącznej wartości >=30!")
                 self.logger.error(
                     self.players[self.current_player_index].name + " położył pierwszą kombinację o wartości " + str(
                         sum_of_tiles) + ". Przy pierwszym ruchu konieczne jest wyłożenie klocków o łącznej wartości >=30!")
             elif self.timed_out and (not self.check_move(own_board) or (
                     len(self.players[self.current_player_index].tiles) == len(
                     self.players[self.current_player_index].tiles_prev)) or sum_of_tiles < 30):
-                # przywróć stan poprzedni i przejdź do następnego gracza
-                #print("ruch nieprawidłowy i czas minął!")
                 self.logger.error(
                     self.players[self.current_player_index].name + " nie wykonał poprawnego pierwszego ruchu i czas się skończył!")
 
                 self.draw_tile()
-                #print(self.timed_out)
             elif not self.check_move(own_board) and not self.timed_out:
-                #print("ruch nieprawidłowy")
                 self.logger.error(
                     self.players[self.current_player_index].name + " nie wykonał poprawnego pierwszego ruchu!")
-                # print(self.timed_out)
-        #if sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour))) and not self.timed_out:
-        #print("a" + str(len(self.players[self.current_player_index].tiles)))
-        #print("b" + str(len(self.players[self.current_player_index].tiles_prev)))
         else:
             if len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and not self.timed_out:
                 #print("Musisz wykonać ruch!")
