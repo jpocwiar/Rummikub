@@ -61,23 +61,29 @@ class OptionsDialog(QDialog):
         self.ip_line_edit = QLineEdit()
         self.port_line_edit = QLineEdit()
         #ip_validator = QRegularExpressionValidator(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b", self)
-        ip_validator = QRegularExpressionValidator(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?:\/\d{1,2})?\b", self)
-        port_validator = QIntValidator(1, 65535, self)
-        self.ip_line_edit.setValidator(ip_validator)
-        self.port_line_edit.setValidator(port_validator)
-        self.ip_line_edit.setPlaceholderText("Adres IP/maska")
+        #self.ip_line_edit.setInputMask("000.000.000.000/00;_")
+        self.ip_line_edit.setInputMask("000.000.000.000;_")
+        self.port_line_edit.setInputMask("0000;_")
+
+        self.ip_line_edit.setPlaceholderText("Adres IP")
         self.port_line_edit.setPlaceholderText("Port")
-        hbox_ip_and_port.addWidget(QLabel("IP/maska: "))
+        hbox_ip_and_port.addWidget(QLabel("IP: "))
         hbox_ip_and_port.addWidget(self.ip_line_edit)
         hbox_ip_and_port.addWidget(QLabel("Port: "))
         hbox_ip_and_port.addWidget(self.port_line_edit)
         self.ip_and_port_group_box.setLayout(hbox_ip_and_port)
         vbox.addWidget(self.ip_and_port_group_box)
 
+        self.replay_button = QPushButton("Odtwórz grę")
+        vbox.addWidget(self.replay_button)
+        self.replay_button.clicked.connect(self.replay_game)
+
         self.save_options_button = QPushButton("Zapisz opcje")
         vbox.addWidget(self.save_options_button)
         self.setLayout(vbox)
         self.save_options_button.clicked.connect(self.save_options)
+
+        self.replay = False
 
 
 
@@ -90,7 +96,16 @@ class OptionsDialog(QDialog):
 
         self.load_options()
 
+    def replay_game(self):
+        self.replay = True
+        self.load_options()
+        self.accept()
+
+    def get_button_pressed(self):
+        return self.replay
+
     def save_options(self):
+        self.replay = False
         player1_name = ""
         player2_name = ""
         player3_name = ""
@@ -116,20 +131,20 @@ class OptionsDialog(QDialog):
         elif self.ai_radio_button.isChecked():
             mode = "AI"
 
-        #ip = self.ip_line_edit.text()
-        ip_with_mask = self.ip_line_edit.text()
-        ip, mask = ip_with_mask.split("/")
+        ip = self.ip_line_edit.text()
+        # ip_with_mask = self.ip_line_edit.text()
+        # ip, mask = ip_with_mask.split("/")
         port = self.port_line_edit.text()
 
-        if mask:
-            if not mask.isdigit() or int(mask) > 32:
-                QMessageBox.critical(None, 'Błąd', 'Nieprawidłowa maska sieciowa.')
-                return QRegExpValidator.Invalid
+        # if mask:
+        #     if not mask.isdigit() or int(mask) > 32:
+        #         QMessageBox.critical(None, 'Błąd', 'Nieprawidłowa maska sieciowa.')
+        #         return QRegExpValidator.Invalid
 
         options = {
             "mode": mode,
             "ip": ip,
-            "mask": mask,
+            #"mask": mask,
             "port": port,
             "player1_name": player1_name,
             "player2_name": player2_name,
@@ -163,9 +178,10 @@ class OptionsDialog(QDialog):
                     self.ai_radio_button.setChecked(True)
 
                 ip = options["ip"]
-                mask = options["mask"]
+                #mask = options["mask"]
                 port = options["port"]
-                self.ip_line_edit.setText(f"{ip}/{mask}")
+                #self.ip_line_edit.setText(f"{ip}/{mask}")
+                self.ip_line_edit.setText(ip)
                 self.port_line_edit.setText(port)
 
                 self.player1_line_edit.setText(options.get("player1_name", ""))

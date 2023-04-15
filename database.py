@@ -78,5 +78,5 @@ class DatabaseXML:
         player_elem = ET.SubElement(self.root.find(f'player{player_id + 1}_tiles'), 'move', {'index': str(move)})
         for i, tile in enumerate(player_tiles):
 
-            tile_elem = ET.SubElement(player_elem, 'tile', {'number': str(tile.numer), 'color': tile.colour, 'player_id': str(player_id), 'order': str(i)})
+            tile_elem = ET.SubElement(player_elem, 'tile', {'number': str(tile.numer), 'color': tile.colour, 'player_id': str(player_id)})
         self.tree.write('rummikub_game.xml', encoding='utf-8')

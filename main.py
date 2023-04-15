@@ -25,12 +25,17 @@ if __name__ == '__main__':
 
     if options_dialog.exec_() == QDialog.Accepted:
         players = options_dialog.get_players()
-        ip_and_port = options_dialog.ip_line_edit.text()
+        ip = options_dialog.ip_line_edit.text()
 
         # inicjalizacja gry z wybranymi opcjami
         view = QGraphicsView()
         #board = Replay(view, players)
-        board = Board(view, players)
+        #board = Board(view, players)
+        replay_pressed = options_dialog.get_button_pressed()
+        if replay_pressed:
+            board = Replay(view, players)
+        else:
+            board = Board(view, players)
         view.setScene(board)
         # ustaw adres IP i port dla gry
         #board.set_ip_and_port(ip_and_port)
