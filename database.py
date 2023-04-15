@@ -1,12 +1,13 @@
 import sqlite3
 import numpy as np
 import os
+import xml.etree.ElementTree as ET
 
 class DatabaseSQL:
     def __init__(self, num_players):
         self.num_players = num_players
         self.move_index = 0
-        db_file = 'rummikub_game.db'
+        db_file = 'history.db'
         if os.path.exists(db_file):
             os.remove(db_file)
         self.conn = sqlite3.connect(db_file)
@@ -41,40 +42,41 @@ class DatabaseSQL:
         #     self.cursor.execute('INSERT INTO draw_tiles VALUES (?, ?, ?)', (self.move_index, tile.numer, tile.colour))
         self.conn.commit()
         # print wywalić potem
-        self.cursor.execute('SELECT * FROM board_tiles')
-        rows = self.cursor.fetchall()
+        # self.cursor.execute('SELECT * FROM board_tiles')
+        # rows = self.cursor.fetchall()
+        #
+        # for row in rows:
+        #     print(row)
 
-        for row in rows:
-            print(row)
 
-    def move_tile_to_table(self, tile, row, col):
-        self.board_tiles[row, col] = tile
-        self.players_tiles[tile.player_id].remove(tile)
-        self.move_index += 1
-        self.save_to_db()
 
-    def move_tile_to_player(self, tile, player_id):
-        self.players_tiles[player_id].append(tile)
-        row, col = np.where(self.board_tiles == tile)
-        self.board_tiles[row, col] = None
-        self.move_index += 1
-        self.save_to_db()
 
-    def draw_tile(self, player_id):
-        tile = self.draw_tiles.pop()
-        tile.player_id = player_id
-        self.players_tiles[player_id].append(tile)
-        self.move_index += 1
-        self.save_to_db()
-
-    def restart_game(self):
-        self.board_tiles = np.zeros((4, 13), dtype=object)
-        self.players_tiles = [[] for _ in range(self.num_players)]
-        self.draw_tiles = []
+class DatabaseXML:
+    def __init__(self, num_players):
+        self.num_players = num_players
         self.move_index = 0
-        self.cursor.execute('DELETE FROM board_tiles')
-        self.cursor.execute('DELETE FROM player_tiles')
-        self.cursor.execute('DELETE FROM draw_tiles')
-        self.conn.commit()
+        xml_file = 'history.xml'
+        if os.path.exists(xml_file):
+            os.remove(xml_file)
+        self.tree = ET.ElementTree(ET.Element('root'))
+        self.root = self.tree.getroot()
+        self.init_db()
 
+    def init_db(self):
+        ET.SubElement(self.root, 'board_tiles')
+        for i in range(self.num_players):
+            ET.SubElement(self.root, f'player{i+1}_tiles')
+        ET.SubElement(self.root, 'draw_tiles')
+        #self.save_to_db(0, np.zeros((14, 14), dtype=object), [], 0)
 
+    def save_to_db(self, player_id, board, player_tiles, move):
+        board_elem = ET.SubElement(self.root.find('board_tiles'), 'move', {'index': str(move)})
+        indices = np.where(board != None)
+        for i in range(indices[0].size):
+            tile = board[indices[0][i],indices[1][i]]
+            tile_elem = ET.SubElement(board_elem, 'tile', {'number': str(tile.numer), 'color': tile.colour, 'row': str(indices[0][i]), 'col': str(indices[1][i])})
+        player_elem = ET.SubElement(self.root.find(f'player{player_id + 1}_tiles'), 'move', {'index': str(move)})
+        for i, tile in enumerate(player_tiles):
+
+            tile_elem = ET.SubElement(player_elem, 'tile', {'number': str(tile.numer), 'color': tile.colour, 'player_id': str(player_id), 'order': str(i)})
+        self.tree.write('rummikub_game.xml', encoding='utf-8')

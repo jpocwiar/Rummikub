@@ -14,6 +14,7 @@ from desk import ForegroundItem
 from logger import Logger
 from options import OptionsDialog
 from board import Board
+from replay import Replay
 
 
 if __name__ == '__main__':
@@ -28,6 +29,7 @@ if __name__ == '__main__':
 
         # inicjalizacja gry z wybranymi opcjami
         view = QGraphicsView()
+        #board = Replay(view, players)
         board = Board(view, players)
         view.setScene(board)
         # ustaw adres IP i port dla gry

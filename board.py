@@ -11,7 +11,7 @@ from player import Player
 from desk import ForegroundItem
 from logger import Logger
 from options import OptionsDialog
-from database import DatabaseSQL
+from database import DatabaseSQL, DatabaseXML
 
 class Board(QGraphicsScene):
     def __init__(self, view, players, parent=None):
@@ -72,6 +72,7 @@ class Board(QGraphicsScene):
         self.logger.setGeometry(1430, 870, 350, 100)
 
         self.database = DatabaseSQL(len(self.players))
+        self.databaseXML = DatabaseXML(len(self.players))
         #self.database.init_db()
 
         self.generate_tiles()
@@ -126,6 +127,7 @@ class Board(QGraphicsScene):
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(235, 235, 235))
         player = self.players[self.current_player_index]
         self.database.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
+        self.databaseXML.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
         # zmiana indeksu
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
