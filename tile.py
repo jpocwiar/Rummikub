@@ -11,8 +11,15 @@ class Tile(QGraphicsItem):
 
         self.rect = QRectF(0, 0, self.width, self.height)
         self.colour = colour
+        self.colours = [Qt.red, Qt.blue, Qt.darkYellow, Qt.black]
         self.numer = numer
         self.is_joker = is_joker
+        self.color_dict = {
+            "red": Qt.red,
+            "blue": Qt.blue,
+            "yellow": Qt.darkYellow,
+            "black": Qt.black
+        }
 
     def boundingRect(self):
         return self.rect
@@ -38,7 +45,7 @@ class Tile(QGraphicsItem):
             numer_rect = painter.fontMetrics().boundingRect(numer_text)
             numer_x = self.rect.center().x() - numer_rect.width() / 2
             numer_y = self.rect.center().y() - numer_rect.height() / 4
-            painter.setPen(QPen(self.colour))
+            painter.setPen(QPen(self.color_dict[self.colour]))
             painter.drawText(QPointF(numer_x, numer_y), numer_text)
 
     def setPosFromIndices(self, i, j):
