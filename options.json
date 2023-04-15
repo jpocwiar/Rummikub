@@ -1,1 +1,1 @@
-{"mode": 3, "ip": "192.113.222.333", "port": "8888", "player1_name": "Adam", "player2_name": "Burek", "player3_name": "Chuj", "player4_name": ""}
+{"mode": 3, "ip": "192.113.222.333", "mask": "32", "port": "8888", "player1_name": "Adam", "player2_name": "Burek", "player3_name": "Czarek", "player4_name": ""}

@@ -11,6 +11,7 @@ from player import Player
 from desk import ForegroundItem
 from logger import Logger
 from options import OptionsDialog
+from database import DatabaseSQL
 
 class Board(QGraphicsScene):
     def __init__(self, view, players, parent=None):
@@ -25,12 +26,14 @@ class Board(QGraphicsScene):
         except:
             self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
+        self.move_number = 0
         #self.user_tiles = []
         self.selected_tiles = []
         self.board = np.full((15, 40), None, dtype=object)
         self.board_prev = self.board.copy()
         self.groups = []
-        self.colours = [Qt.red, Qt.blue, Qt.darkYellow, Qt.black]
+        #self.colours = [Qt.red, Qt.blue, Qt.darkYellow, Qt.black]
+        self.colours = ["red", "blue", "yellow", "black"]
         self.players = players
         self.current_player_index = 0
         self.red_rects = []
@@ -68,6 +71,9 @@ class Board(QGraphicsScene):
         self.logger = Logger(view)
         self.logger.setGeometry(1430, 870, 350, 100)
 
+        self.database = DatabaseSQL(len(self.players))
+        #self.database.init_db()
+
         self.generate_tiles()
         self.logger.log('Początek gry')
         #umieszczenie kafelków gracza
@@ -85,6 +91,7 @@ class Board(QGraphicsScene):
         self.timer_timer.timeout.connect(self.update_timer)
         self.timer_timer.start(5)
 
+        #umieszczenie nazw graczy
         self.player_name_items = []
         y = 800
         for i, player in enumerate(self.players):
@@ -112,13 +119,13 @@ class Board(QGraphicsScene):
         self.timer.update()
         self.timed_out = False
 
-
-
     def switch_player(self):
         # przejdź do następnego gracza
         for tile in self.players[self.current_player_index].tiles:
             self.removeItem(tile)
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(235, 235, 235))
+        player = self.players[self.current_player_index]
+        self.database.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
         # zmiana indeksu
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
@@ -130,24 +137,15 @@ class Board(QGraphicsScene):
 
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
         self.restart_timer()
+        self.move_number +=1
 
     def make_move(self):
         if self.players[self.current_player_index].first_move:
 
-            #own_board = np.subtract(self.board, self.board_prev)
             own_board = np.where(self.board == self.board_prev, None, self.board)
-            #tu jest wersja bez pętli, ale nie da się tak zrobić dobrze jokerów w pierwszym ruchu (sumowanie)
-            # func = lambda til: til.numer if not til.is_joker else 6
-            # vfunc = np.vectorize(func)
             mask = np.where(own_board != None)
-            #print(mask[1])
             own_tiles = own_board[mask]
-            # sum_of_tiles = 0
-            # if own_tiles.size >1:
-            #     sum_of_tiles = np.sum(vfunc(own_tiles))
-            # print(sum_of_tiles)
             sum_of_tiles = 0
-            #print(own_tiles[1].numer)
             if len(own_tiles) >=3:
                 for i, tile in enumerate(own_tiles):
                     sum_of_tiles+=tile.numer
@@ -311,20 +309,14 @@ class Board(QGraphicsScene):
             if counter == 0:
                 counter += 1
                 group = [board[non_none_indices[0][i], non_none_indices[1][i]]]
-                # groups.append(board[non_none_indices])
-                # print("eeee")
             elif non_none_indices[0][i] == y and non_none_indices[1][i] == x + 1:  # sprawdzanie czy obok siebie
                 counter += 1
                 group.append(board[non_none_indices[0][i], non_none_indices[1][i]])
                 if i == non_none_indices[0].size - 1 and counter >= 3:
                     self.groups.append(group)
-                    # print("aaaa")
-                # print("ddddd")
+
             elif (not (non_none_indices[0][i] == y and non_none_indices[1][i] == x + 1) or i == non_none_indices[
                 0].size) and counter < 3:
-                # print(counter)
-
-                # print("ccccc")
                 return False
             elif not (non_none_indices[0][i] == y and non_none_indices[1][i] == x + 1) and counter >= 3:
                 counter = 1
@@ -394,8 +386,8 @@ class Board(QGraphicsScene):
                       for numer in range(1, 14)
                       for i in range(2)]
 
-        self.tiles += [Tile(Qt.black, 0, is_joker=True),
-                       Tile(Qt.red, 0, is_joker=True)]
+        self.tiles += [Tile("black", 0, is_joker=True),
+                       Tile("red", 0, is_joker=True)]
         random.shuffle(self.tiles)
         for player in self.players:
             player.tiles = self.tiles[:14]

@@ -16,9 +16,6 @@ from options import OptionsDialog
 from board import Board
 
 
-
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 

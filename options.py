@@ -60,13 +60,14 @@ class OptionsDialog(QDialog):
         hbox_ip_and_port = QHBoxLayout()
         self.ip_line_edit = QLineEdit()
         self.port_line_edit = QLineEdit()
-        ip_validator = QRegularExpressionValidator(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b", self)
+        #ip_validator = QRegularExpressionValidator(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b", self)
+        ip_validator = QRegularExpressionValidator(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?:\/\d{1,2})?\b", self)
         port_validator = QIntValidator(1, 65535, self)
         self.ip_line_edit.setValidator(ip_validator)
         self.port_line_edit.setValidator(port_validator)
-        self.ip_line_edit.setPlaceholderText("Adres IP")
+        self.ip_line_edit.setPlaceholderText("Adres IP/maska")
         self.port_line_edit.setPlaceholderText("Port")
-        hbox_ip_and_port.addWidget(QLabel("IP: "))
+        hbox_ip_and_port.addWidget(QLabel("IP/maska: "))
         hbox_ip_and_port.addWidget(self.ip_line_edit)
         hbox_ip_and_port.addWidget(QLabel("Port: "))
         hbox_ip_and_port.addWidget(self.port_line_edit)
@@ -115,12 +116,20 @@ class OptionsDialog(QDialog):
         elif self.ai_radio_button.isChecked():
             mode = "AI"
 
-        ip = self.ip_line_edit.text()
+        #ip = self.ip_line_edit.text()
+        ip_with_mask = self.ip_line_edit.text()
+        ip, mask = ip_with_mask.split("/")
         port = self.port_line_edit.text()
+
+        if mask:
+            if not mask.isdigit() or int(mask) > 32:
+                QMessageBox.critical(None, 'Błąd', 'Nieprawidłowa maska sieciowa.')
+                return QRegExpValidator.Invalid
 
         options = {
             "mode": mode,
             "ip": ip,
+            "mask": mask,
             "port": port,
             "player1_name": player1_name,
             "player2_name": player2_name,
@@ -154,8 +163,9 @@ class OptionsDialog(QDialog):
                     self.ai_radio_button.setChecked(True)
 
                 ip = options["ip"]
+                mask = options["mask"]
                 port = options["port"]
-                self.ip_line_edit.setText(ip)
+                self.ip_line_edit.setText(f"{ip}/{mask}")
                 self.port_line_edit.setText(port)
 
                 self.player1_line_edit.setText(options.get("player1_name", ""))
