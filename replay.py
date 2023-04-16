@@ -53,9 +53,11 @@ class Replay(QGraphicsScene):
             self.player_name_items.append(name_item)
             y += 30
 
-        tree = ET.parse('history.xml')
-
-        self.root = tree.getroot()
+        try:
+            tree = ET.parse('history.xml')
+            self.root = tree.getroot()
+        except:
+            pass
 
         self.move_number = 0
         self.current_player_index = 0

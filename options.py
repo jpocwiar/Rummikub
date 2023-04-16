@@ -3,6 +3,8 @@ from PySide2.QtGui import *
 from PySide2.QtCore import *
 from player import Player
 import json
+import os
+import sys
 
 class OptionsDialog(QDialog):
     def __init__(self):
@@ -109,6 +111,9 @@ class OptionsDialog(QDialog):
         self.load_options()
 
     def replay_game(self):
+        if not os.path.exists('history.db'):
+            QMessageBox.critical(self, 'Error', 'Brak pliku history.db.')
+            return
         self.replay = True
         self.load_options()
         self.accept()
