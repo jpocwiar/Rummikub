@@ -14,11 +14,10 @@ class OptionsDialog(QDialog):
 
         #self.setStyleSheet('background-image: url(":/backgr/wood3.jpg");')
         #self.setStyleSheet("background-color: navy; color: white;")
-
         vbox = QVBoxLayout()
-        self.load_options_button = QPushButton("Załaduj opcje")
-        vbox.addWidget(self.load_options_button)
-        self.load_options_button.clicked.connect(self.load_options_from_file)
+
+        # Create a QHBoxLayout for the "Liczba graczy" group box
+        hbox_number_of_players = QHBoxLayout()
         self.number_of_players_group_box = QGroupBox("Liczba graczy")
         self.one_player_radio_button = QRadioButton("1 gracz")
         self.one_player_radio_button.setChecked(True)
@@ -33,7 +32,22 @@ class OptionsDialog(QDialog):
         vbox_number_of_players.addWidget(self.four_players_radio_button)
         vbox_number_of_players.addWidget(self.ai_radio_button)
         self.number_of_players_group_box.setLayout(vbox_number_of_players)
-        vbox.addWidget(self.number_of_players_group_box)
+        self.number_of_players_group_box.setMaximumWidth(self.width() / 2)
+        hbox_number_of_players.addWidget(self.number_of_players_group_box)
+
+        vbox_replay = QVBoxLayout()
+        self.replay_group_box = QGroupBox("Wczytywanie danych")
+        self.replay_button = QPushButton("Odtwórz poprzednią grę")
+        vbox_replay.addWidget(self.replay_button)
+        self.replay_button.clicked.connect(self.replay_game)
+        self.load_options_button = QPushButton("Załaduj opcje")
+        vbox_replay.addWidget(self.load_options_button)
+        self.load_options_button.clicked.connect(self.load_options_from_file)
+        self.replay_group_box.setLayout(vbox_replay)
+        self.replay_group_box.setMaximumWidth(self.width() / 2)
+        hbox_number_of_players.addWidget(self.replay_group_box)
+
+        vbox.addLayout(hbox_number_of_players)
 
         self.players_group_box = QGroupBox("Nazwy graczy")
         hbox_players = QHBoxLayout()
@@ -54,6 +68,7 @@ class OptionsDialog(QDialog):
         hbox_players.addWidget(QLabel("Gracz 4:"))
         hbox_players.addWidget(self.player4_line_edit)
         self.players_group_box.setLayout(hbox_players)
+
         vbox.addWidget(self.players_group_box)
 
         self.ip_and_port_group_box = QGroupBox("Adres IP i port")
@@ -73,10 +88,10 @@ class OptionsDialog(QDialog):
         hbox_ip_and_port.addWidget(self.port_line_edit)
         self.ip_and_port_group_box.setLayout(hbox_ip_and_port)
         vbox.addWidget(self.ip_and_port_group_box)
-
-        self.replay_button = QPushButton("Odtwórz grę")
-        vbox.addWidget(self.replay_button)
-        self.replay_button.clicked.connect(self.replay_game)
+        #
+        # self.replay_button = QPushButton("Odtwórz grę")
+        # vbox.addWidget(self.replay_button)
+        # self.replay_button.clicked.connect(self.replay_game)
 
         self.save_options_button = QPushButton("Zapisz opcje i graj")
         vbox.addWidget(self.save_options_button)

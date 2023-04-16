@@ -1,2 +1,26 @@
-2023-04-16 00:41:20,487 - INFO - Pocz¹tek gry
-2023-04-16 00:41:28,196 - INFO - Adam po³o¿y³ kombinacjê o wartoœci 36
+2023-04-16 13:48:55,479 - INFO - Pocz¹tek gry
+2023-04-16 13:49:07,553 - INFO - Adam dobra³ klocek
+2023-04-16 13:49:07,731 - INFO - Burek dobra³ klocek
+2023-04-16 13:49:07,882 - INFO - Czeslaw dobra³ klocek
+2023-04-16 13:49:08,020 - INFO - Dariusz dobra³ klocek
+2023-04-16 13:49:08,165 - INFO - Adam dobra³ klocek
+2023-04-16 13:49:08,299 - INFO - Burek dobra³ klocek
+2023-04-16 13:49:08,440 - INFO - Czeslaw dobra³ klocek
+2023-04-16 13:49:08,583 - INFO - Dariusz dobra³ klocek
+2023-04-16 13:49:08,724 - INFO - Adam dobra³ klocek
+2023-04-16 13:49:08,867 - INFO - Burek dobra³ klocek
+2023-04-16 13:49:09,009 - INFO - Czeslaw dobra³ klocek
+2023-04-16 13:49:09,144 - INFO - Dariusz dobra³ klocek
+2023-04-16 13:49:09,281 - INFO - Adam dobra³ klocek
+2023-04-16 13:49:19,623 - WARNING - [B£¥D] Burek po³o¿y³ pierwsz¹ kombinacjê o wartoœci 12. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
+
+2023-04-16 13:49:19,869 - INFO - Burek dobra³ klocek
+2023-04-16 13:49:27,936 - INFO - Czeslaw dobra³ klocek
+2023-04-16 13:49:35,673 - INFO - Dariusz po³o¿y³ kombinacjê o wartoœci 52
+2023-04-16 13:49:42,335 - INFO - Adam po³o¿y³ kombinacjê o wartoœci 33
+2023-04-16 13:49:53,525 - INFO - Burek dobra³ klocek
+2023-04-16 13:50:03,773 - INFO - Czeslaw dobra³ klocek
+2023-04-16 13:50:13,489 - INFO - Dariusz wykona³ prawid³owy ruch i zosta³o mu 11 klocków
+2023-04-16 13:50:14,818 - INFO - Adam dobra³ klocek
+2023-04-16 13:50:14,961 - INFO - Burek dobra³ klocek
+2023-04-16 13:50:15,099 - INFO - Czeslaw dobra³ klocek
