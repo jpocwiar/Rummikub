@@ -76,6 +76,7 @@ class Board(QGraphicsScene):
         #self.database.init_db()
 
         self.generate_tiles()
+        self.save_to_db()
         self.logger.log('Początek gry')
         #umieszczenie kafelków gracza
         for i, tile in enumerate(self.players[self.current_player_index].tiles):
@@ -120,16 +121,23 @@ class Board(QGraphicsScene):
         self.timer.update()
         self.timed_out = False
 
+    def save_to_db(self):
+        player = self.players[self.current_player_index]
+        self.database.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
+        self.databaseXML.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
+        self.move_number += 1
+
     def switch_player(self):
         # przejdź do następnego gracza
         for tile in self.players[self.current_player_index].tiles:
             self.removeItem(tile)
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(235, 235, 235))
-        player = self.players[self.current_player_index]
-        self.database.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
-        self.databaseXML.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
+        #zapisanie ruchu do database
+        self.save_to_db()
         # zmiana indeksu
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
+        # zapisanie do database stanu sprzed ruchu
+        self.save_to_db()
         self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
         # Dodanie klocków następnego gracza
         for i, tile in enumerate(self.players[self.current_player_index].tiles):
@@ -139,7 +147,6 @@ class Board(QGraphicsScene):
 
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
         self.restart_timer()
-        self.move_number +=1
 
     def make_move(self):
         if self.players[self.current_player_index].first_move:
@@ -224,6 +231,7 @@ class Board(QGraphicsScene):
                         len(self.players[self.current_player_index].tiles)) + " klocków")
                 if len(self.players[self.current_player_index].tiles) == 0:
                     self.logger.log("Wygrywa " + str(self.players[self.current_player_index].name) + "!")
+                    self.save_to_db()
                     msg_box = QMessageBox()
                     msg_box.setText("Wygrywa " + str(self.players[self.current_player_index].name) + "!")
                     msg_box.setWindowTitle("Message Box")

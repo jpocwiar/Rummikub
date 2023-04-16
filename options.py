@@ -78,16 +78,13 @@ class OptionsDialog(QDialog):
         vbox.addWidget(self.replay_button)
         self.replay_button.clicked.connect(self.replay_game)
 
-        self.save_options_button = QPushButton("Zapisz opcje")
+        self.save_options_button = QPushButton("Zapisz opcje i graj")
         vbox.addWidget(self.save_options_button)
         self.setLayout(vbox)
         self.save_options_button.clicked.connect(self.save_options)
 
         self.replay = False
 
-
-
-        # Połącz sygnał zdarzenia zmiany stanu przycisków wyboru liczby graczy z metodą set_player_name_fields_enabled()
         self.one_player_radio_button.toggled.connect(self.set_player_name_fields_enabled)
         self.two_players_radio_button.toggled.connect(self.set_player_name_fields_enabled)
         self.three_players_radio_button.toggled.connect(self.set_player_name_fields_enabled)

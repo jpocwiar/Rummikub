@@ -79,4 +79,4 @@ class DatabaseXML:
         for i, tile in enumerate(player_tiles):
 
             tile_elem = ET.SubElement(player_elem, 'tile', {'number': str(tile.numer), 'color': tile.colour, 'player_id': str(player_id)})
-        self.tree.write('rummikub_game.xml', encoding='utf-8')
+        self.tree.write('history.xml', encoding='utf-8')
