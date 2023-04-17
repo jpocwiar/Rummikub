@@ -42,6 +42,12 @@ class OptionsDialog(QDialog):
         self.replay_button = QPushButton("Odtwórz poprzednią grę")
         vbox_replay.addWidget(self.replay_button)
         self.replay_button.clicked.connect(self.replay_game)
+        self.replay_buttonXML = QPushButton("Odtwórz poprzednią grę z XML")
+        vbox_replay.addWidget(self.replay_buttonXML)
+        self.replay_buttonXML.clicked.connect(self.replay_gameXML)
+        #self.replay_button_choose = QPushButton("Odtwórz poprzednią grę z wczytanego pliku")
+        #vbox_replay.addWidget(self.replay_button_choose)
+        #self.replay_button_choose.clicked.connect(self.load_file)
         self.load_options_button = QPushButton("Załaduj opcje")
         vbox_replay.addWidget(self.load_options_button)
         self.load_options_button.clicked.connect(self.load_options_from_file)
@@ -100,7 +106,7 @@ class OptionsDialog(QDialog):
         self.setLayout(vbox)
         self.save_options_button.clicked.connect(self.save_options)
 
-        self.replay = False
+        self.replay = 0
 
         self.one_player_radio_button.toggled.connect(self.set_player_name_fields_enabled)
         self.two_players_radio_button.toggled.connect(self.set_player_name_fields_enabled)
@@ -110,11 +116,30 @@ class OptionsDialog(QDialog):
 
         self.load_options()
 
+    def load_file(self):
+
+        file_path, _ = QFileDialog.getOpenFileName(None, "Select file to load", "", "Database (*.db);;XML (*.xml)")
+
+        if file_path:
+            if file_path.endswith('.db'):
+                self.replay_game(file_path)
+            elif file_path.endswith('.xml'):
+                self.replay_gameXML(file_path)
+
+
     def replay_game(self):
         if not os.path.exists('history.db'):
             QMessageBox.critical(self, 'Error', 'Brak pliku history.db.')
             return
-        self.replay = True
+        self.replay = 1
+        self.load_options()
+        self.accept()
+
+    def replay_gameXML(self):
+        if not os.path.exists('history.xml'):
+            QMessageBox.critical(self, 'Error', 'Brak pliku history.xml.')
+            return
+        self.replay = 2
         self.load_options()
         self.accept()
 
@@ -122,7 +147,7 @@ class OptionsDialog(QDialog):
         return self.replay
 
     def save_options(self):
-        self.replay = False
+        self.replay = 0
         player1_name = ""
         player2_name = ""
         player3_name = ""

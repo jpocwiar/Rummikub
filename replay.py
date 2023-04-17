@@ -17,10 +17,10 @@ import sqlite3
 import xml.etree.ElementTree as ET
 
 class Replay(QGraphicsScene):
-    def __init__(self, view, players, parent=None):
+    def __init__(self, view, players, modeXML = False, path = 'history.db', parent=None):
         super().__init__(parent)
         self.setSceneRect(0, 0, 1800, 1000)
-
+        self.mode = modeXML
         try:
             background_image = QImage(":/backgr/wood3.jpg")
             background_brush = QBrush(
@@ -53,25 +53,33 @@ class Replay(QGraphicsScene):
             self.player_name_items.append(name_item)
             y += 30
 
-        try:
+        if modeXML:
             tree = ET.parse('history.xml')
             self.root = tree.getroot()
-        except:
-            pass
+            board_tiles = tree.getroot().find('board_tiles')
+            #move_indexes = [int(move.attrib['index']) for move in board_tiles.iter('move')]
+            self.max_moves = int(board_tiles.findall('move')[-1].attrib['index'])
+            if self.max_moves is None:
+                self.max_moves = 0
+            #max_moves = max(move_indexes)
+            self.number_of_players = len(list(self.root)) - 2
+            #print(self.number_of_players)
+        else:
+            conn = sqlite3.connect('history.db')
+            self.cursor = conn.cursor()
+            self.cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table';")
+            self.number_of_players = self.cursor.fetchone()[0] - 2
+            # print(self.number_of_players)
+
+            # self.cursor.execute('SELECT COUNT(DISTINCT move_index) FROM board_tiles')
+            self.cursor.execute('SELECT MAX(move_index) FROM board_tiles')
+            self.max_moves = self.cursor.fetchone()[0]
+            if self.max_moves is None:
+                self.max_moves = 0
 
         self.move_number = 0
         self.current_player_index = 0
-        conn = sqlite3.connect('history.db')
-        self.cursor = conn.cursor()
-        self.cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table';")
-        self.number_of_players = self.cursor.fetchone()[0] - 2
-        #print(self.number_of_players)
 
-        #self.cursor.execute('SELECT COUNT(DISTINCT move_index) FROM board_tiles')
-        self.cursor.execute('SELECT MAX(move_index) FROM board_tiles')
-        self.max_moves = self.cursor.fetchone()[0]
-        if self.max_moves is None:
-            self.max_moves = 0
 
         self.move_number_widget = QLabel(f"Ruch: {self.move_number}/{self.max_moves}")
         self.move_number_widget.setFont(QFont("Arial", 16))
@@ -108,9 +116,11 @@ class Replay(QGraphicsScene):
 
         self.increment_button.setGeometry(1600, 800, 50, 50)
         self.decrement_button.setGeometry(1500, 800, 50, 50)
+        if self.mode:
+            self.retrieve_tilesXML()
+        else:
+            self.retrieve_tiles()
 
-        #self.retrieve_tilesXML()
-        self.retrieve_tiles()
 
     def increment_move_number(self):
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(235, 235, 235))
@@ -122,8 +132,10 @@ class Replay(QGraphicsScene):
 
         self.update_move_number()
         self.clear()
-        #self.retrieve_tilesXML()
-        self.retrieve_tiles()
+        if self.mode:
+            self.retrieve_tilesXML()
+        else:
+            self.retrieve_tiles()
 
     def decrement_move_number(self):
         self.move_number -= 1
@@ -134,15 +146,15 @@ class Replay(QGraphicsScene):
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
         self.update_move_number()
         self.clear()
-        #self.retrieve_tilesXML()
-        self.retrieve_tiles()
+        if self.mode:
+            self.retrieve_tilesXML()
+        else:
+            self.retrieve_tiles()
 
     def retrieve_tiles(self):
-        # retrieve the tiles for the current move from the database
         self.cursor.execute('SELECT * FROM board_tiles WHERE move_index = ?', (self.move_number,))
         tiles = self.cursor.fetchall()
 
-        # iterate over the tiles and place them on the board
         for tile_data in tiles:
             number, color, row, col = tile_data[1:]
             if number == 0:
@@ -167,11 +179,9 @@ class Replay(QGraphicsScene):
             self.addItem(tile)
 
     def retrieve_tilesXML(self):
-        # retrieve the tiles for the current move from the XML file
         board_elem = self.root.find(f'board_tiles/move[@index="{self.move_number}"]')
         board_tiles = board_elem.findall('tile')
 
-        # iterate over the tiles and place them on the board
         for tile_elem in board_tiles:
             number = int(tile_elem.attrib['number'])
             color = tile_elem.attrib['color']
@@ -204,7 +214,6 @@ class Replay(QGraphicsScene):
             self.addItem(tile)
 
     def clear(self):
-        # remove only Tile objects from the scene
         for item in self.items():
             if isinstance(item, Tile):
                 self.removeItem(item)
@@ -229,6 +238,6 @@ class Replay(QGraphicsScene):
         painter.setPen(Qt.NoPen)
         painter.translate(8, 8)
         painter.rotate(-90 if direction == Qt.UpArrow else 90)
-        painter.drawPolygon(QPolygonF([QPointF(-6, -4), QPointF(0, 4), QPointF(6, -4)]))
+        painter.drawPolygon(QPolygonF([QPointF(-12, -8), QPointF(0, 8), QPointF(12, -8)]))
         painter.end()
         return QIcon(pixmap)

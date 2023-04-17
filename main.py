@@ -32,8 +32,13 @@ if __name__ == '__main__':
         #board = Replay(view, players)
         #board = Board(view, players)
         replay_pressed = options_dialog.get_button_pressed()
-        if replay_pressed:
-            board = Replay(view, players)
+        if replay_pressed == 1: #sql
+            #path = options_dialog.db_path
+            #board = Replay(view, players, False, path)
+            board = Replay(view, players, False)
+        elif replay_pressed == 2: #xml
+            #path = options_dialog.db_path
+            board = Replay(view, players, True)
         else:
             board = Board(view, players)
         view.setScene(board)
