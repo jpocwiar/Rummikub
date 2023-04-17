@@ -21,6 +21,7 @@ class Replay(QGraphicsScene):
         super().__init__(parent)
         self.setSceneRect(0, 0, 1800, 1000)
         self.mode = modeXML
+        self.view = None
         try:
             background_image = QImage(":/backgr/wood3.jpg")
             background_brush = QBrush(
@@ -29,7 +30,7 @@ class Replay(QGraphicsScene):
         except:
             self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
-
+        self.board = np.full((15, 40), None, dtype=object)
 
         self.tile_width = Tile.width
         self.tile_height = Tile.height
@@ -76,6 +77,12 @@ class Replay(QGraphicsScene):
             self.max_moves = self.cursor.fetchone()[0]
             if self.max_moves is None:
                 self.max_moves = 0
+            for i in range(self.number_of_players):
+                self.cursor.execute(f'SELECT MAX(move_index) FROM player{i+1}_tiles')
+                val = self.cursor.fetchone()[0]
+                if val is not None and val > self.max_moves:
+                    self.max_moves = val
+
 
         self.move_number = 0
         self.current_player_index = 0
@@ -99,10 +106,16 @@ class Replay(QGraphicsScene):
         self.addWidget(self.move_number_widget3)
         self.move_number_widget3.setGeometry(1400, 50, 350, 30)
 
-        # self.increment_button = QPushButton("+")
-        # self.increment_button.clicked.connect(self.increment_move_number)
-        # self.decrement_button = QPushButton("-")
-        # self.decrement_button.clicked.connect(self.decrement_move_number)
+        self.tiles_number_item = QGraphicsTextItem("Tiles to draw: " + str(len(self.tiles)))
+        self.tiles_number_item.setFont(QFont("Arial", 16, QFont.Bold))
+        self.tiles_number_item.setDefaultTextColor(QColor(235, 235, 235))
+        self.addItem(self.tiles_number_item)
+        self.tiles_number_item.setPos(1500, 900)
+
+        self.jump_button = QPushButton("Wskocz do momentu")
+        self.jump_button.clicked.connect(self.jump_into_moment)
+        #self.addWidget(self.jump_button)
+        #self.jump_button.setGeometry(1500, 900, 150, 50)
 
         self.increment_button = QToolButton()
         self.increment_button.setIcon(self.create_arrow_icon(Qt.UpArrow))
@@ -120,6 +133,28 @@ class Replay(QGraphicsScene):
             self.retrieve_tilesXML()
         else:
             self.retrieve_tiles()
+
+
+
+    def jump_into_moment(self):
+        # if self.view is not None:
+        #     self.view.close()
+
+        self.view = QGraphicsView()
+        self.board_game = Board(self.view, self.players, False)
+
+        #self.board.refresh_board()
+        self.board_game.current_player_index = self.current_player_index
+        self.board_game.tiles = self.tiles.copy()
+        self.board_game.board = self.board.copy()
+
+        self.view.setScene(self.board_game)
+        self.view.setFixedSize(1810, 1020)
+        self.view.setWindowTitle("Rummikub - Jakub Poćwiardowski 184827")
+        icon = QIcon(":/joker/jok.png")
+        self.view.setWindowIcon(icon)
+        self.board_game.draw_tile()
+        self.view.show()
 
 
     def increment_move_number(self):
@@ -154,20 +189,23 @@ class Replay(QGraphicsScene):
     def retrieve_tiles(self):
         self.cursor.execute('SELECT * FROM board_tiles WHERE move_index = ?', (self.move_number,))
         tiles = self.cursor.fetchall()
-
+        self.board = np.full((15, 40), None, dtype=object)
         for tile_data in tiles:
             number, color, row, col = tile_data[1:]
             if number == 0:
                 tile = Tile(color, number, is_joker=True)
+                self.board[row,col] = tile
             else:
                 tile = Tile(color, number)
-            #print(tile)
+                self.board[row, col] = tile
+            #print(self.board)
             tile.setPosFromIndices(row, col)
             self.addItem(tile)
 
         i = self.current_player_index + 1
         self.cursor.execute(f'SELECT * FROM player{i}_tiles WHERE move_index = ?', (self.move_number,))
         tiles = self.cursor.fetchall()
+        self.players[i-1].tiles = []
         for i, tile_data in enumerate(tiles):
             number, color = tile_data[1:3]
             if number == 0:
@@ -177,6 +215,18 @@ class Replay(QGraphicsScene):
             tile.setPos(self.foreground_item.pos() + QPointF(
                 (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
             self.addItem(tile)
+            #self.players[i - 1].tiles.append(tile)
+        self.cursor.execute(f'SELECT * FROM draw_tiles WHERE move_index = ?', (self.move_number,))
+        tiles = self.cursor.fetchall()
+        self.tiles = []
+        for i, tile_data in enumerate(tiles):
+            number, color = tile_data[1:3]
+            if number == 0:
+                tile = Tile(color, number, is_joker=True)
+            else:
+                tile = Tile(color, number)
+            self.tiles.append(tile)
+        self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
 
     def retrieve_tilesXML(self):
         board_elem = self.root.find(f'board_tiles/move[@index="{self.move_number}"]')
@@ -212,6 +262,20 @@ class Replay(QGraphicsScene):
             tile.setPos(self.foreground_item.pos() + QPointF(
                 (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
             self.addItem(tile)
+        draw_elem = self.root.find(f'draw_tiles/move[@index="{self.move_number}"]')
+        draw_tiles = draw_elem.findall('tile')
+        self.tiles = []
+        for i, tile_elem in enumerate(draw_tiles):
+            number = int(tile_elem.attrib['number'])
+            color = tile_elem.attrib['color']
+
+            if number == 0:
+                tile = Tile(color, number, is_joker=True)
+            else:
+                tile = Tile(color, number)
+            self.tiles.append(tile)
+            self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
+
 
     def clear(self):
         for item in self.items():

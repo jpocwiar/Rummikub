@@ -23,10 +23,7 @@ class DatabaseSQL:
         self.conn.commit()
 
 
-    def save_to_db(self, player_id, board, player_tiles, move):
-        # self.cursor.execute('DELETE FROM board_tiles WHERE move_index = ?', (self.move_index,))
-        # self.cursor.execute('DELETE FROM player_tiles WHERE move_index = ?', (self.move_index,))
-        # self.cursor.execute('DELETE FROM draw_tiles WHERE move_index = ?', (self.move_index,))
+    def save_to_db(self, player_id, board, player_tiles, draw_tiles, move):
         indices = np.where(board != None)
 
         for i in range(indices[0].size):
@@ -38,15 +35,13 @@ class DatabaseSQL:
                                 (move, tile.numer, tile.colour, row, col))
         for tile in player_tiles:
             self.cursor.execute(f'INSERT INTO player{player_id+1}_tiles VALUES (?, ?, ?, ?)', (move, tile.numer, tile.colour, player_id))
+        for tile in draw_tiles:
+            self.cursor.execute(f'INSERT INTO draw_tiles VALUES (?, ?, ?)',
+                                (move, tile.numer, tile.colour))
+
         # for tile in self.draw_tiles:
         #     self.cursor.execute('INSERT INTO draw_tiles VALUES (?, ?, ?)', (self.move_index, tile.numer, tile.colour))
         self.conn.commit()
-        # print wywalić potem
-        # self.cursor.execute('SELECT * FROM board_tiles')
-        # rows = self.cursor.fetchall()
-        #
-        # for row in rows:
-        #     print(row)
 
 
 
@@ -69,7 +64,7 @@ class DatabaseXML:
         ET.SubElement(self.root, 'draw_tiles')
         #self.save_to_db(0, np.zeros((14, 14), dtype=object), [], 0)
 
-    def save_to_db(self, player_id, board, player_tiles, move):
+    def save_to_db(self, player_id, board, player_tiles, draw_tiles, move):
         board_elem = ET.SubElement(self.root.find('board_tiles'), 'move', {'index': str(move)})
         indices = np.where(board != None)
         for i in range(indices[0].size):
@@ -77,6 +72,10 @@ class DatabaseXML:
             tile_elem = ET.SubElement(board_elem, 'tile', {'number': str(tile.numer), 'color': tile.colour, 'row': str(indices[0][i]), 'col': str(indices[1][i])})
         player_elem = ET.SubElement(self.root.find(f'player{player_id + 1}_tiles'), 'move', {'index': str(move)})
         for i, tile in enumerate(player_tiles):
-
             tile_elem = ET.SubElement(player_elem, 'tile', {'number': str(tile.numer), 'color': tile.colour, 'player_id': str(player_id)})
+        draw_elem = ET.SubElement(self.root.find(f'draw_tiles'), 'move', {'index': str(move)})
+        for i, tile in enumerate(draw_tiles):
+            tile_elem = ET.SubElement(draw_elem, 'tile',
+                                      {'number': str(tile.numer), 'color': tile.colour})
+
         self.tree.write('history.xml', encoding='utf-8')

@@ -14,7 +14,7 @@ from options import OptionsDialog
 from database import DatabaseSQL, DatabaseXML
 
 class Board(QGraphicsScene):
-    def __init__(self, view, players, parent=None):
+    def __init__(self, view, players, save_data = True, parent=None):
         super().__init__(parent)
         self.setSceneRect(0, 0, 1800, 1000)
 
@@ -71,8 +71,10 @@ class Board(QGraphicsScene):
         self.logger = Logger(view)
         self.logger.setGeometry(1430, 870, 350, 100)
 
-        self.database = DatabaseSQL(len(self.players))
-        self.databaseXML = DatabaseXML(len(self.players))
+        self.save_data = save_data
+        if save_data:
+            self.database = DatabaseSQL(len(self.players))
+            self.databaseXML = DatabaseXML(len(self.players))
         #self.database.init_db()
 
         self.generate_tiles()
@@ -122,10 +124,11 @@ class Board(QGraphicsScene):
         self.timed_out = False
 
     def save_to_db(self):
-        player = self.players[self.current_player_index]
-        self.database.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
-        self.databaseXML.save_to_db(self.current_player_index, self.board, player.tiles, self.move_number)
-        self.move_number += 1
+        if self.save_data:
+            player = self.players[self.current_player_index]
+            self.database.save_to_db(self.current_player_index, self.board, player.tiles,self.tiles, self.move_number)
+            self.databaseXML.save_to_db(self.current_player_index, self.board, player.tiles, self.tiles, self.move_number)
+            self.move_number += 1
 
     def switch_player(self):
         # przejdź do następnego gracza
@@ -429,8 +432,6 @@ class Board(QGraphicsScene):
         mask = np.where(self.board != None)
         #print(len(mask[0]))
         if len(mask[0]) != 0:
-            # print(mask[0][1])
-            # print(mask[1][1])
             tiles = self.board[mask]
             for i, tile in enumerate(tiles):
                 tile.setPosFromIndices(mask[0][i],mask[1][i])
