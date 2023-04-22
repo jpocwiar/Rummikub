@@ -14,6 +14,7 @@ from desk import ForegroundItem
 from logger import Logger
 from options import OptionsDialog
 from board import Board
+from board_online import BoardOnline
 from replay import Replay
 
 
@@ -25,11 +26,10 @@ if __name__ == '__main__':
     if options_dialog.exec_() == QDialog.Accepted:
         players = options_dialog.get_players()
         ip = options_dialog.ip_line_edit.text()
-
+        port = options_dialog.port_line_edit.text()
         view = QGraphicsView()
-        #board = Replay(view, players)
-        #board = Board(view, players)
         replay_pressed = options_dialog.get_button_pressed()
+        mode_chosen = options_dialog.get_selected_radio_button()
         if replay_pressed == 1: #sql
             #path = options_dialog.db_path
             #board = Replay(view, players, False, path)
@@ -37,6 +37,8 @@ if __name__ == '__main__':
         elif replay_pressed == 2: #xml
             #path = options_dialog.db_path
             board = Replay(view, players, True)
+        elif mode_chosen == "Online":
+            board = BoardOnline(view, players, ip, port)
         else:
             board = Board(view, players)
         view.setScene(board)

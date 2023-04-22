@@ -27,12 +27,14 @@ class OptionsDialog(QDialog):
         self.three_players_radio_button = QRadioButton("3 graczy")
         self.four_players_radio_button = QRadioButton("4 graczy")
         self.ai_radio_button = QRadioButton("AI")
+        self.online_radio_button = QRadioButton("Online")
         vbox_number_of_players = QVBoxLayout()
         vbox_number_of_players.addWidget(self.one_player_radio_button)
         vbox_number_of_players.addWidget(self.two_players_radio_button)
         vbox_number_of_players.addWidget(self.three_players_radio_button)
         vbox_number_of_players.addWidget(self.four_players_radio_button)
         vbox_number_of_players.addWidget(self.ai_radio_button)
+        vbox_number_of_players.addWidget(self.online_radio_button)
         self.number_of_players_group_box.setLayout(vbox_number_of_players)
         self.number_of_players_group_box.setMaximumWidth(self.width() / 2)
         hbox_number_of_players.addWidget(self.number_of_players_group_box)
@@ -86,7 +88,7 @@ class OptionsDialog(QDialog):
         #ip_validator = QRegularExpressionValidator(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b", self)
         #self.ip_line_edit.setInputMask("000.000.000.000/00;_")
         self.ip_line_edit.setInputMask("000.000.000.000;_")
-        self.port_line_edit.setInputMask("0000;_")
+        self.port_line_edit.setInputMask("00000;_")
 
         self.ip_line_edit.setPlaceholderText("Adres IP")
         self.port_line_edit.setPlaceholderText("Port")
@@ -113,6 +115,7 @@ class OptionsDialog(QDialog):
         self.three_players_radio_button.toggled.connect(self.set_player_name_fields_enabled)
         self.four_players_radio_button.toggled.connect(self.set_player_name_fields_enabled)
         self.ai_radio_button.toggled.connect(self.set_player_name_fields_enabled)
+        self.online_radio_button.toggled.connect(self.set_player_name_fields_enabled)
 
         self.load_options()
 
@@ -172,6 +175,10 @@ class OptionsDialog(QDialog):
             player4_name = self.player4_line_edit.text() or "Player4"
         elif self.ai_radio_button.isChecked():
             mode = "AI"
+            player1_name = self.player1_line_edit.text() or "Player1"
+        elif self.online_radio_button.isChecked():
+            mode = "online"
+            player1_name = self.player1_line_edit.text() or "Player1"
 
         ip = self.ip_line_edit.text()
         # ip_with_mask = self.ip_line_edit.text()
@@ -218,6 +225,8 @@ class OptionsDialog(QDialog):
                     self.four_players_radio_button.setChecked(True)
                 elif mode == "AI":
                     self.ai_radio_button.setChecked(True)
+                elif mode == "online":
+                    self.online_radio_button.setChecked(True)
 
                 ip = options["ip"]
                 #mask = options["mask"]
@@ -247,6 +256,8 @@ class OptionsDialog(QDialog):
             players = [Player(self.player1_line_edit.text() or "Player1"), Player(self.player2_line_edit.text() or "Player2"), Player(self.player3_line_edit.text() or "Player3"), Player(self.player4_line_edit.text() or "Player4")]
         elif self.ai_radio_button.isChecked():
             players = [Player(self.player1_line_edit.text() or "Player1"), Player("AI")]
+        elif self.online_radio_button.isChecked():
+            players = [Player(self.player1_line_edit.text() or "Player1"), Player("Player2")]
 
         return players
 
@@ -277,3 +288,22 @@ class OptionsDialog(QDialog):
             self.player2_line_edit.setEnabled(False)
             self.player3_line_edit.setEnabled(False)
             self.player4_line_edit.setEnabled(False)
+        elif self.online_radio_button.isChecked():
+            self.player1_line_edit.setEnabled(True)
+            self.player2_line_edit.setEnabled(False)
+            self.player3_line_edit.setEnabled(False)
+            self.player4_line_edit.setEnabled(False)
+
+    def get_selected_radio_button(self):
+        if self.one_player_radio_button.isChecked():
+            return "1 gracz"
+        elif self.two_players_radio_button.isChecked():
+            return "2 graczy"
+        elif self.three_players_radio_button.isChecked():
+            return "3 graczy"
+        elif self.four_players_radio_button.isChecked():
+            return "4 graczy"
+        elif self.ai_radio_button.isChecked():
+            return "AI"
+        elif self.online_radio_button.isChecked():
+            return "Online"
