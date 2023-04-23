@@ -17,6 +17,10 @@ import select
 import sys
 import time
 import os
+import json
+import xml.etree.ElementTree as ET
+
+from socketio_thread import SocketioThread
 
 class BoardOnline(QGraphicsScene):
     def __init__(self, view, players, ip, port, save_data = False, parent=None):
@@ -25,7 +29,13 @@ class BoardOnline(QGraphicsScene):
 
         self.ip_address = ip
         self.port = port
+        self.socket = SocketioThread()
+        self.socket.receive_state_signal.connect(self.state_received)
+        self.socket.whoami_signal.connect(self.whoami_received)
+        self.socket.run()
 
+        self.beginning = True
+        self.first_move = True
         try:
             background_image = QImage(":/backgr/wood3.jpg")
             background_brush = QBrush(
@@ -34,6 +44,8 @@ class BoardOnline(QGraphicsScene):
         except:
             self.setBackgroundBrush(QBrush(QColor(238, 238, 238)))
         self.tiles = []
+        self.my_tiles = []
+        self.my_tiles_prev = []
         self.move_number = 0
         #self.user_tiles = []
         self.selected_tiles = []
@@ -96,11 +108,11 @@ class BoardOnline(QGraphicsScene):
             self.databaseXML = DatabaseXML(len(self.players))
         #self.database.init_db()
 
-        self.generate_tiles()
-        self.save_to_db()
-        self.logger.log('Początek gry')
+        #self.generate_tiles()
+        #self.save_to_db()
+        #self.logger.log('Początek gry')
         #umieszczenie kafelków gracza
-        for i, tile in enumerate(self.players[self.current_player_index].tiles):
+        for i, tile in enumerate(self.my_tiles):
             tile.setPos(self.foreground_item.pos() + QPointF(
                 (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
             self.addItem(tile)
@@ -141,20 +153,126 @@ class BoardOnline(QGraphicsScene):
         self.addItem(self.notification_item)
         self.notification_item.setPos(10, 10)
 
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.server_socket.connect(('localhost', int(self.port)))
-        try:
-            self.server_socket.connect((self.ip_address, int(self.port)))
-            message = "Hello from the client!"
-            self.server_socket.sendall(message.encode())
-            data = self.server_socket.recv(1024)
-            response = data.decode()
-            self.chat_output.append(response)
+        # self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # #self.server_socket.connect(('localhost', int(self.port)))
+        # try:
+        #     self.server_socket.connect((self.ip_address, int(self.port)))
+        #     message = "Hello from the client!"
+        #     self.server_socket.sendall(message.encode())
+        #     data = self.server_socket.recv(1024)
+        #     response = data.decode()
+        #     self.chat_output.append(response)
+        #
+        #     #self.receive_thread = threading.Thread(target=self.handle_server)
+        #     #self.receive_thread.start()
+        # except:
+        #     print("error")
 
-            #self.receive_thread = threading.Thread(target=self.handle_server)
-            #self.receive_thread.start()
-        except:
-            print("error")
+    def read_xml(self, xml_string):
+        print("wlazlem")
+        self.clear()
+        colors = ['black','black','blue','yellow','red']
+
+        root = ET.fromstring(xml_string)
+
+        # board_elem = root.find(f'turn')
+        # board_tiles = board_elem.findall('tile')
+
+        for container in root.findall('./board/container'):
+            container_values = container.text.split(',')
+            index = int(container_values[0])
+            colo = int(container_values[1])
+            val = int(container_values[2])
+            if int(val) == 0:
+                tile = Tile(colors[colo], int(val), is_joker=True)
+            else:
+                tile = Tile(colors[colo], int(val))
+            print(tile)
+            row = int(index / 24)
+            col = int(index % 24)
+            self.board[row,col] = tile
+
+            tile.setPosFromIndices(row, col)
+            self.addItem(tile)
+
+        print(self.board)
+        if self.beginning:
+            self.my_tiles = []
+            player_three = root.findall("player")[0]
+
+            tiles = player_three.findall("tile")
+
+            for i,tile in enumerate(tiles):
+                values = tile.text.split(',')
+                colo = values[0]
+                #print(colo)
+                value = values[1]
+                print(value)
+                if int(value) == 0:
+                    tile = Tile(colors[int(colo)], int(value), is_joker=True)
+                else:
+                    tile = Tile(colors[int(colo)], int(value))
+                self.my_tiles.append(tile)
+                tile.setPos(self.foreground_item.pos() + QPointF(
+                    (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
+                self.addItem(tile)
+        draw_elem = root.find(f'bag')
+        draw_tiles = draw_elem.findall('tile')
+        self.tiles = []
+        for tile_elem in draw_tiles:
+            #print('dodajdddde')
+            values = tile_elem.text.split(',')
+            colo = values[0]
+            value = int(values[1])
+
+            if value == 0:
+                tile = Tile(colors[int(colo)], int(value), is_joker=True)
+            else:
+                tile = Tile(colors[int(colo)], int(value))
+            self.tiles.append(tile)
+            self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
+
+        if self.beginning:
+            self.beginning = False
+            self.my_tiles_prev = self.my_tiles.copy()
+            print(self.my_tiles_prev)
+
+    def create_xml(self):
+        turn_root = ET.Element('turn')
+        colors = {'None':0, 'black':1, 'blue':2, 'yellow':3, 'red':4}
+        # bag
+        bag_element = ET.SubElement(turn_root, 'bag')
+        for tile in self.tiles:
+            tile_element = ET.SubElement(bag_element, 'tile')
+            tile_element.text = f'{colors[tile.colour]},{tile.numer}'
+
+        # board
+        board_element = ET.SubElement(turn_root, 'board')
+        indices = np.where(self.board != None)
+        for i in range(indices[0].size):
+            tile = self.board[indices[0][i], indices[1][i]]
+            tile_element = ET.SubElement(board_element, 'container')
+            index = indices[0][i] * 24 + indices[1][i]
+            tile_element.text = f'{index},{colors[tile.colour]},{tile.numer}'
+            # tile_elem = ET.SubElement(board_element, 'tile',
+            #                           {'number': str(tile.numer), 'color': tile.colour, 'row': str(indices[0][i]),
+            #                            'col': str(indices[1][i])})
+        # players
+        # for player in players:
+        #     player_element = ET.SubElement(turn_root, 'player')
+        #     player_element.set('first_move', str(True))
+        #     for tile in player:
+        #         tile_element = ET.SubElement(player_element, 'tile')
+        #         tile_element.text = f'{colors[tile.colour]},{tile.numer}'
+
+        tree = ET.ElementTree(turn_root)
+        xml_string = ET.tostring(tree.getroot()).decode()
+        return xml_string
+
+    def clear(self):
+        for item in self.items():
+            if isinstance(item, Tile) and item in self.board:
+                self.removeItem(item)
 
     def send_message(self):
         message = self.chat_input.text()
@@ -201,6 +319,16 @@ class BoardOnline(QGraphicsScene):
         self.server_socket.close()
         sys.exit()
 
+    def state_received(self, state):
+        self.state = state
+        self.chat_output.setText(json.dumps(state, indent=4))
+        print(self.state['xml'])
+        if self.state['xml'] != "":
+            self.read_xml(self.state['xml'])
+
+    def whoami_received(self, data):
+        self.label1.setText(str(data))
+
     def update_timer(self):
         self.timer.update_time()
 
@@ -218,8 +346,8 @@ class BoardOnline(QGraphicsScene):
 
     def switch_player(self):
         # przejdź do następnego gracza
-        for tile in self.players[self.current_player_index].tiles:
-            self.removeItem(tile)
+        # for tile in self.my_tiles:
+        #     self.removeItem(tile)
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(235, 235, 235))
         #zapisanie ruchu do database
         self.save_to_db()
@@ -229,16 +357,20 @@ class BoardOnline(QGraphicsScene):
         self.save_to_db()
         self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
         # Dodanie klocków następnego gracza
-        for i, tile in enumerate(self.players[self.current_player_index].tiles):
-            tile.setPos(self.foreground_item.pos() + QPointF(
-                (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
-            self.addItem(tile)
+        # for i, tile in enumerate(self.my_tiles):
+        #     tile.setPos(self.foreground_item.pos() + QPointF(
+        #         (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
+        #     self.addItem(tile)
 
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
         self.restart_timer()
+        self.state['xml'] = self.create_xml()
+        #self.state = self.create_xml()
+        print("xml: " + self.state['xml'])
+        self.socket.send_state(self.state['xml'])
 
     def make_move(self):
-        if self.players[self.current_player_index].first_move:
+        if self.first_move:
 
             own_board = np.where(self.board == self.board_prev, None, self.board)
             mask = np.where(own_board != None)
@@ -278,68 +410,67 @@ class BoardOnline(QGraphicsScene):
 
 
 
-            if len(self.players[self.current_player_index].tiles) == len(
-                    self.players[self.current_player_index].tiles_prev) and not self.timed_out:
+            if len(self.my_tiles) == len(
+                    self.my_tiles_prev) and not self.timed_out:
                 #print("Musisz wykonać ruch!")
-                self.logger.error(str(self.players[self.current_player_index].name) + " nie wykonał pierwszego ruchu!")
-            elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
-                    self.players[self.current_player_index].tiles_prev) and sum_of_tiles >=30:
+                self.logger.error(str(self.players[0].name) + " nie wykonał pierwszego ruchu!")
+            elif self.check_move(own_board) and not len(self.my_tiles) == len(
+                    self.my_tiles_prev) and sum_of_tiles >=30:
                 #print("ruch prawidłowy")
                 self.logger.log(
-                    str(self.players[self.current_player_index].name) + " położył kombinację o wartości " + str(
+                    str(self.players[0].name) + " położył kombinację o wartości " + str(
                         sum_of_tiles))
                 self.board_prev = self.board.copy()
-                self.players[self.current_player_index].tiles_prev = self.players[
-                    self.current_player_index].tiles.copy()
+                self.my_tiles_prev = self.my_tiles.copy()
 
-                self.players[self.current_player_index].first_move = False #już nie pierwszy ruch
+                self.first_move = False #już nie pierwszy ruch
                 self.switch_player()
-            elif self.check_move(own_board) and not len(self.players[self.current_player_index].tiles) == len(
-                    self.players[self.current_player_index].tiles_prev) and sum_of_tiles < 30 and not self.timed_out:
+            elif self.check_move(own_board) and not len(self.my_tiles) == len(
+                    self.my_tiles_prev) and sum_of_tiles < 30 and not self.timed_out:
                 self.logger.error(
-                    self.players[self.current_player_index].name + " położył pierwszą kombinację o wartości " + str(
+                    self.players[0].name + " położył pierwszą kombinację o wartości " + str(
                         sum_of_tiles) + ". Przy pierwszym ruchu konieczne jest wyłożenie klocków o łącznej wartości >=30!")
             elif self.timed_out and (not self.check_move(own_board) or (
-                    len(self.players[self.current_player_index].tiles) == len(
-                    self.players[self.current_player_index].tiles_prev)) or sum_of_tiles < 30):
+                    len(self.my_tiles) == len(
+                    self.my_tiles_prev)) or sum_of_tiles < 30):
                 self.logger.error(
-                    self.players[self.current_player_index].name + " nie wykonał poprawnego pierwszego ruchu i czas się skończył!")
+                    self.players[0].name + " nie wykonał poprawnego pierwszego ruchu i czas się skończył!")
 
                 self.draw_tile()
             elif not self.check_move(own_board) and not self.timed_out:
                 self.logger.error(
-                    self.players[self.current_player_index].name + " nie wykonał poprawnego pierwszego ruchu!")
+                    self.players[0].name + " nie wykonał poprawnego pierwszego ruchu!")
         else:
-            if len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and not self.timed_out:
+            if len(self.my_tiles) == len(self.my_tiles_prev) and not self.timed_out:
                 #print("Musisz wykonać ruch!")
-                self.logger.error(str(self.players[self.current_player_index].name) + " nie wykonał ruchu!")
-            elif self.check_move(self.board) and not len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev):
+                self.logger.error(str(self.players[0].name) + " nie wykonał ruchu!")
+            elif self.check_move(self.board) and not len(self.my_tiles) == len(self.my_tiles_prev):
                 #print("ruch prawidłowy")
                 self.logger.log(
-                    str(self.players[self.current_player_index].name) + " wykonał prawidłowy ruch i zostało mu " + str(
-                        len(self.players[self.current_player_index].tiles)) + " klocków")
-                if len(self.players[self.current_player_index].tiles) == 0:
-                    self.logger.log("Wygrywa " + str(self.players[self.current_player_index].name) + "!")
+                    str(self.players[0].name) + " wykonał prawidłowy ruch i zostało mu " + str(
+                        len(self.my_tiles)) + " klocków")
+                if len(self.my_tiles) == 0:
+                    self.logger.log("Wygrywa " + str(self.players[0].name) + "!")
                     self.save_to_db()
                     msg_box = QMessageBox()
-                    msg_box.setText("Wygrywa " + str(self.players[self.current_player_index].name) + "!")
+                    msg_box.setText("Wygrywa " + str(self.players[0].name) + "!")
                     msg_box.setWindowTitle("Message Box")
                     msg_box.setStandardButtons(QMessageBox.Ok)
 
                     response = msg_box.exec_()
                     sys.exit()
                 self.board_prev = self.board.copy()
-                self.players[self.current_player_index].tiles_prev = self.players[self.current_player_index].tiles.copy()
+                self.my_tiles_prev = self.my_tiles.copy()
                 self.switch_player()
-            #elif (not self.check_move() and self.timed_out) or (sorted(self.players[self.current_player_index].tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour)) == sorted(self.players[self.current_player_index].tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour)))) and self.timed_out): #przy pierwszym ruchu może robić jakby osobny board? Zęby to 30 sprawdzać
-            elif (not self.check_move(self.board) and self.timed_out) or (len(self.players[self.current_player_index].tiles) == len(self.players[self.current_player_index].tiles_prev) and self.timed_out):
+            #elif (not self.check_move() and self.timed_out) or (sorted(self.my_tiles, key=lambda tile: (tile.numer, self.colours.index(tile.colour)) == sorted(self.my_tiles_prev, key=lambda tile: (tile.numer, self.colours.index(tile.colour)))) and self.timed_out): #przy pierwszym ruchu może robić jakby osobny board? Zęby to 30 sprawdzać
+            elif (not self.check_move(self.board) and self.timed_out) or (len(self.my_tiles) == len(self.my_tiles_prev) and self.timed_out):
                 #przywróć stan poprzedni i przejdź do następnego gracza
                 #print("ruch nieprawidłowy i czas minął!")
                 self.logger.error(
-                    self.players[self.current_player_index].name + " nie wykonał poprawnego ruchu i czas się skończył!")
+                    self.players[0].name + " nie wykonał poprawnego ruchu i czas się skończył!")
                 self.draw_tile()
             elif not self.check_move(self.board) and not self.timed_out:
-                self.logger.error(str(self.players[self.current_player_index].name) + " - ruch nieprawidłowy!")
+                self.logger.error(str(self.players[0].name) + " - ruch nieprawidłowy!")
 
 
     def check_move(self,board):
@@ -349,7 +480,7 @@ class BoardOnline(QGraphicsScene):
                 non_joker = np.sum([not til.is_joker for til in group])
                 #print(non_joker)
                 if(non_joker <= 1):
-                    self.logger.log(str(self.players[self.current_player_index].name) + "- kombinacja z dominacją jokerów")
+                    self.logger.log(str(self.players[0].name) + "- kombinacja z dominacją jokerów")
                     #pass
                 else:
                     colors = set(str(til.colour) for til in group if not til.is_joker)
@@ -361,7 +492,7 @@ class BoardOnline(QGraphicsScene):
                             #print(unique_values)
                             #print("po kolei")
                             # self.logger.log(
-                            #     str(self.players[self.current_player_index].name) + "- kombinacja jeden kolor, po kolei")
+                            #     str(self.players[0).name + "- kombinacja jeden kolor, po kolei")
                             pass
                         else:
                             #print("nie po kolei")
@@ -387,7 +518,7 @@ class BoardOnline(QGraphicsScene):
         else:
             #print("Za mało klocków")
             # self.logger.log(
-            #     str(self.players[self.current_player_index].name) + "- za mało klocków w kombinacji")
+            #     str(self.players[0).name + "- za mało klocków w kombinacji")
             #msg_box = QMessageBox()
             #msg_box.setText("Układ musi zawierać co najmniej 3 klocki!")
             #msg_box.setWindowTitle("Message Box")
@@ -433,34 +564,32 @@ class BoardOnline(QGraphicsScene):
     def sort_tiles_by_color(self):
         colors = self.colours
         #self.user_tiles = sorted(self.user_tiles, key=lambda tile: colors.index(tile.colour))
-        self.players[self.current_player_index].tiles = sorted(self.players[self.current_player_index].tiles, key=lambda tile: colors.index(tile.colour))
+        self.my_tiles = sorted(self.my_tiles, key=lambda tile: colors.index(tile.colour))
 
-        for index, tile in enumerate(self.players[self.current_player_index].tiles):
+        for index, tile in enumerate(self.my_tiles):
             tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.tile_width,
                                                              int(index / 20) * self.tile_height))
 
     def sort_tiles_by_number(self):
-        self.players[self.current_player_index].tiles = sorted(self.players[self.current_player_index].tiles, key=lambda tile: tile.numer)
+        self.my_tiles = sorted(self.my_tiles, key=lambda tile: tile.numer)
 
-        for index, tile in enumerate(self.players[self.current_player_index].tiles):
+        for index, tile in enumerate(self.my_tiles):
             tile.setPos(self.foreground_item.pos() + QPointF((index % 20) * self.tile_width,
                                                              int(index / 20) * self.tile_height))
 
     def draw_tile(self):
         if len(self.tiles) > 0:
             self.board = self.board_prev.copy()
-            self.players[self.current_player_index].tiles = self.players[
-                self.current_player_index].tiles_prev.copy()
+            self.my_tiles = self.my_tiles_prev.copy()
             tile = self.tiles.pop()
             #self.user_tiles.append(tile)
-            self.players[self.current_player_index].add_tile(tile)
-            tile.setPos(self.foreground_item.pos() + QPointF(((len(self.players[self.current_player_index].tiles) - 1) % 20) * self.tile_width,
-                                                             int((len(self.players[self.current_player_index].tiles) - 1) / 20) * self.tile_height))
+            self.my_tiles.append(tile)
+            tile.setPos(self.foreground_item.pos() + QPointF(((len(self.my_tiles) - 1) % 20) * self.tile_width,
+                                                             int((len(self.my_tiles) - 1) / 20) * self.tile_height))
             self.board_prev = self.board.copy()
-            self.players[self.current_player_index].tiles_prev = self.players[
-                self.current_player_index].tiles.copy()
-            #self.addItem(tile)
-            self.logger.log(str(self.players[self.current_player_index].name) + " dobrał klocek")
+            self.my_tiles_prev = self.my_tiles.copy()
+            self.addItem(tile)
+            self.logger.log(str(self.players[0].name) + " dobrał klocek")
             self.switch_player()
             #print(self.board)
             #print(self.board_prev)
@@ -500,12 +629,16 @@ class BoardOnline(QGraphicsScene):
         ind_y = int(round(pos.y() / self.tile_height))
         max_index_x = int(self.width()/self.tile_width)
         max_index_y = int(self.width()/self.tile_width)
-        if ind_x > max_index_x - 10:
-            ind_x = max_index_x - 10
+        # if ind_x > max_index_x - 10:
+        #     ind_x = max_index_x - 10
+        if ind_x > 23:
+            ind_x = 23
         elif ind_x < 0:
             ind_x = - ind_x
-        if ind_y > max_index_y - 10:
-            ind_y = max_index_y - 10
+        # if ind_y > max_index_y - 10:
+        #     ind_y = max_index_y - 10
+        if ind_y == 9 or ind_y >= 12:
+            ind_y = 8
         elif ind_y < 0:
             ind_y = -ind_y
         while self.board[ind_y, ind_x] is not None: #jak użytkownik chce położyć swój klocek na już istniejący, to zostaje on przestawiony w prawo
@@ -524,11 +657,11 @@ class BoardOnline(QGraphicsScene):
 
     def possible_movements(self, tile):
         possible_moves = []
-        if self.players[self.current_player_index].first_move:
+        if self.first_move:
             board = np.where(self.board == self.board_prev, None, self.board)
         else:
             board = self.board
-        # if not self.players[self.current_player_index].first_move:
+        # if not self.first_move:
         mask = (board[:, :-1] != None) & (board[:, 1:] == None)
         left_indices = np.column_stack(np.where(mask))
         left_indices[:, 1] += 1
@@ -716,19 +849,19 @@ class BoardOnline(QGraphicsScene):
                 pos = self.snap_to_grid(self.drag_tile.pos())
                 row = int(pos.y() / self.tile_height)
                 col = int(pos.x() / self.tile_width)
-                if self.drag_tile in self.players[self.current_player_index].tiles and row < 10: #z pulpitu na planszę
+                if self.drag_tile in self.my_tiles and row < 10: #z pulpitu na planszę
                     #
                     self.board[row, col] = self.drag_tile
-                    self.players[self.current_player_index].tiles.remove(self.drag_tile)
-                elif self.drag_tile not in self.players[self.current_player_index].tiles and row >= 10 and self.drag_tile in self.players[self.current_player_index].tiles_prev: #z planszy na pulpit
+                    self.my_tiles.remove(self.drag_tile)
+                elif self.drag_tile not in self.my_tiles and row >= 10 and self.drag_tile in self.my_tiles_prev: #z planszy na pulpit
 
-                    self.players[self.current_player_index].tiles.append(self.drag_tile)
-                elif self.drag_tile not in self.players[self.current_player_index].tiles and row >= 10 and not self.drag_tile in self.players[self.current_player_index].tiles_prev: #wzięcie nieswojego klocka
+                    self.my_tiles.append(self.drag_tile)
+                elif self.drag_tile not in self.my_tiles and row >= 10 and not self.drag_tile in self.my_tiles_prev: #wzięcie nieswojego klocka
                     #print("Nie można przeciągać nieswojego klocka na pulpit!")
-                    self.logger.error(str(self.players[self.current_player_index].name) + " podjął próbę kradzieży nieswojego klocka!")
+                    self.logger.error(str(self.players[0].name) + " podjął próbę kradzieży nieswojego klocka!")
                     pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.tile_width * 20 / 2, int(
                         round((self.sceneRect().height() - self.tile_height * 2) / self.tile_height)) * self.tile_height))
-                elif self.drag_tile not in self.players[self.current_player_index].tiles and row < 10: #zmiana pozycji na planszy
+                elif self.drag_tile not in self.my_tiles and row < 10: #zmiana pozycji na planszy
                     self.board[row, col] = self.drag_tile
                 self.drag_tile.setPos(pos)
             if self.drag_tile in self.selected_tiles:
@@ -737,13 +870,13 @@ class BoardOnline(QGraphicsScene):
 
                     row = int(pos.y() / self.tile_height)
                     col = int(pos.x() / self.tile_width)
-                    if tile in self.players[self.current_player_index].tiles and row < 10:
+                    if tile in self.my_tiles and row < 10:
 
                         self.board[row, col] = tile
-                        self.players[self.current_player_index].tiles.remove(tile)
-                    elif tile not in self.players[self.current_player_index].tiles and row >= 10 and self.drag_tile in self.players[self.current_player_index].tiles_prev: #z planszy na pulpit
+                        self.my_tiles.remove(tile)
+                    elif tile not in self.my_tiles and row >= 10 and self.drag_tile in self.my_tiles_prev: #z planszy na pulpit
 
-                        self.players[self.current_player_index].tiles.append(tile)
+                        self.my_tiles.append(tile)
                     elif self.drag_tile not in self.players[
                         self.current_player_index].tiles and row >= 10 and not self.drag_tile in self.players[
                         self.current_player_index].tiles_prev:  # wzięcie nieswojego klocka
@@ -752,7 +885,7 @@ class BoardOnline(QGraphicsScene):
                                                   self.current_player_index].name) + " podjął próbę kradzieży nieswojego klocka!")
                         pos = self.snap_to_grid(QPointF(self.sceneRect().width() / 2 + self.tile_width * 20 / 2 + interval*self.tile_width, int(
                             round((self.sceneRect().height() - self.tile_height * 2) / self.tile_height)) * self.tile_height))
-                    elif tile not in self.players[self.current_player_index].tiles and row < 10:
+                    elif tile not in self.my_tiles and row < 10:
                         self.board[row, col] = tile
                     tile.setPos(pos)
             self.drag_tile = None
