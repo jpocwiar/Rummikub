@@ -6,7 +6,8 @@ from PySide2.QtCore import QThread, Signal
 
 class SocketioThread(QThread):
 
-    ip = 'localhost'
+    #ip = 'localhost'
+    ip = '192.168.178.200'
     port = '50000'
     receive_state_signal = Signal(dict)
     whoami_signal = Signal(str)
@@ -14,7 +15,7 @@ class SocketioThread(QThread):
     def __init__(self, nickname=uuid.uuid4().__str__()):
         super().__init__()
         self.sio = socketio.Client()
-        self.nickname = nickname
+        self.nickname = 'Jakub'
 
     def run(self):
         @self.sio.on('receivestate')

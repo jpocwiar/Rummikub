@@ -27,13 +27,17 @@ class BoardOnline(QGraphicsScene):
         super().__init__(parent)
         self.setSceneRect(0, 0, 1800, 1000)
 
+
+        self.current_sid = 0
+        self.sid = 0
+        self.my_index = 0
         self.ip_address = ip
         self.port = port
         self.socket = SocketioThread()
         self.socket.receive_state_signal.connect(self.state_received)
         self.socket.whoami_signal.connect(self.whoami_received)
         self.socket.run()
-
+        self.socket.who_am_i()
         self.beginning = True
         self.first_move = True
         try:
@@ -84,6 +88,10 @@ class BoardOnline(QGraphicsScene):
         self.accept_move.setGeometry(1600, 540, 120, 30)
         self.accept_move.clicked.connect(self.make_move)
 
+        self.button1 = QPushButton('Start Game', view)
+        self.button1.setGeometry(1600, 570, 120, 30)
+        self.button1.pressed.connect(lambda: self.socket.start_game())
+
         self.sort_by_number_button = QPushButton('Sort by Number', view)
         self.sort_by_number_button.setGeometry(1600, 70, 120, 30)
         self.sort_by_number_button.clicked.connect(
@@ -124,7 +132,7 @@ class BoardOnline(QGraphicsScene):
 
         self.timer_timer = QTimer()
         self.timer_timer.timeout.connect(self.update_timer)
-        if False:
+        if True:
             self.timer_timer.start(5)
 
         #umieszczenie nazw graczy
@@ -134,7 +142,7 @@ class BoardOnline(QGraphicsScene):
             name_item = QGraphicsTextItem(player.name)
             name_item.setFont(QFont("Arial", 16, QFont.Bold))
             name_item.setDefaultTextColor(QColor(235, 235, 235))
-            if i == self.current_player_index:
+            if i == self.current_sid:
                 name_item.setDefaultTextColor(QColor(255, 100, 100))
             self.addItem(name_item)
             name_item.setPos(50, y)
@@ -153,23 +161,10 @@ class BoardOnline(QGraphicsScene):
         self.addItem(self.notification_item)
         self.notification_item.setPos(10, 10)
 
-        # self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # #self.server_socket.connect(('localhost', int(self.port)))
-        # try:
-        #     self.server_socket.connect((self.ip_address, int(self.port)))
-        #     message = "Hello from the client!"
-        #     self.server_socket.sendall(message.encode())
-        #     data = self.server_socket.recv(1024)
-        #     response = data.decode()
-        #     self.chat_output.append(response)
-        #
-        #     #self.receive_thread = threading.Thread(target=self.handle_server)
-        #     #self.receive_thread.start()
-        # except:
-        #     print("error")
+
 
     def read_xml(self, xml_string):
-        print("wlazlem")
+        #print("wlazlem")
         self.clear()
         colors = ['black','black','blue','yellow','red']
 
@@ -177,6 +172,13 @@ class BoardOnline(QGraphicsScene):
 
         # board_elem = root.find(f'turn')
         # board_tiles = board_elem.findall('tile')
+
+        for i in range(3):
+            self.player_name_items[i].setPlainText(self.state['players'][i])
+            self.player_name_items[i].setDefaultTextColor(QColor(255, 255, 255))
+        for i, sid in enumerate(self.state['sids']):
+            if sid == self.current_sid:
+                self.player_name_items[i].setDefaultTextColor(QColor(255, 100, 100))
 
         for container in root.findall('./board/container'):
             container_values = container.text.split(',')
@@ -187,27 +189,27 @@ class BoardOnline(QGraphicsScene):
                 tile = Tile(colors[colo], int(val), is_joker=True)
             else:
                 tile = Tile(colors[colo], int(val))
-            print(tile)
+            #print(tile)
             row = int(index / 24)
             col = int(index % 24)
             self.board[row,col] = tile
 
             tile.setPosFromIndices(row, col)
             self.addItem(tile)
-
-        print(self.board)
+        self.board_prev = self.board.copy()
+        #print(self.board)
         if self.beginning:
             self.my_tiles = []
-            player_three = root.findall("player")[0]
-
-            tiles = player_three.findall("tile")
+            #me = root.findall("player")[0]
+            me = root.findall("player")[self.my_index]
+            tiles = me.findall("tile")
 
             for i,tile in enumerate(tiles):
                 values = tile.text.split(',')
                 colo = values[0]
                 #print(colo)
                 value = values[1]
-                print(value)
+                #print(value)
                 if int(value) == 0:
                     tile = Tile(colors[int(colo)], int(value), is_joker=True)
                 else:
@@ -235,35 +237,71 @@ class BoardOnline(QGraphicsScene):
         if self.beginning:
             self.beginning = False
             self.my_tiles_prev = self.my_tiles.copy()
-            print(self.my_tiles_prev)
+            #print(self.my_tiles_prev)
+
+        self.refresh_board()
+        #print("aaa")
 
     def create_xml(self):
-        turn_root = ET.Element('turn')
+        xml_string = self.state['xml']
+        tree = ET.ElementTree(ET.fromstring(xml_string))
+        turn_root = tree.getroot()
+        turn_root[0].clear()
         colors = {'None':0, 'black':1, 'blue':2, 'yellow':3, 'red':4}
         # bag
         bag_element = ET.SubElement(turn_root, 'bag')
         for tile in self.tiles:
-            tile_element = ET.SubElement(bag_element, 'tile')
-            tile_element.text = f'{colors[tile.colour]},{tile.numer}'
-
+            tile_element = ET.SubElement(turn_root[0], 'tile')
+            if tile.is_joker:
+                tile_element.text = f'{0},{0}'
+            else:
+                tile_element.text = f'{colors[tile.colour]},{tile.numer}'
+        turn_root[1].clear()
         # board
         board_element = ET.SubElement(turn_root, 'board')
         indices = np.where(self.board != None)
+        #print("aaa" + str(self.board))
         for i in range(indices[0].size):
             tile = self.board[indices[0][i], indices[1][i]]
-            tile_element = ET.SubElement(board_element, 'container')
+            tile_element = ET.SubElement(turn_root[1], 'container')
             index = indices[0][i] * 24 + indices[1][i]
-            tile_element.text = f'{index},{colors[tile.colour]},{tile.numer}'
+            if tile.is_joker:
+                tile_element.text = f'{index},{0},{0}'
+            else:
+                tile_element.text = f'{index},{colors[tile.colour]},{tile.numer}'
             # tile_elem = ET.SubElement(board_element, 'tile',
             #                           {'number': str(tile.numer), 'color': tile.colour, 'row': str(indices[0][i]),
             #                            'col': str(indices[1][i])})
         # players
-        # for player in players:
-        #     player_element = ET.SubElement(turn_root, 'player')
-        #     player_element.set('first_move', str(True))
-        #     for tile in player:
-        #         tile_element = ET.SubElement(player_element, 'tile')
-        #         tile_element.text = f'{colors[tile.colour]},{tile.numer}'
+        #for player in players:
+        turn_root[2 + self.my_index].clear()
+        #player_element = ET.SubElement(turn_root, 'player')
+        if self.first_move:
+            turn_root[2 + self.my_index].set('first_move', str(True))
+        else:
+            turn_root[2 + self.my_index].set('first_move', str(False))
+        for tile in self.my_tiles:
+            tile_element = ET.SubElement(turn_root[2 + self.my_index], 'tile')
+            if tile.is_joker:
+                tile_element.text = f'{0},{0}'
+            else:
+                tile_element.text = f'{colors[tile.colour]},{tile.numer}'
+        #root2 = ET.fromstring(self.state['xml'])
+        print(self.state['xml'])
+        # player2 = root2.findall('.//player')[1]
+        # new_player = ET.SubElement(root2, 'player', first_move=player.get('first_move'))
+        # new_player.text = '\n'
+        # for tile in player.findall('.//tile'):
+        #     new_tile = ET.SubElement(new_player, 'tile')
+        #     new_tile.text = tile.text
+        #     new_tile.tail = '\n'
+        # new_player.tail = '\n'
+        # for player in root2.findall('player')[1:]:
+        #     new_player = ET.SubElement(turn_root, 'player')
+        #     new_player.set('first_move', player.get('first_move'))
+        #     for tile in player.findall('tile'):
+        #         new_tile = ET.SubElement(new_player, 'tile')
+        #         new_tile.text = tile.text
 
         tree = ET.ElementTree(turn_root)
         xml_string = ET.tostring(tree.getroot()).decode()
@@ -321,16 +359,22 @@ class BoardOnline(QGraphicsScene):
 
     def state_received(self, state):
         self.state = state
+        self.current_sid = str(self.state['current_player']['sid'])
+        self.my_index = self.state['sids'].index(self.sid)
         self.chat_output.setText(json.dumps(state, indent=4))
         print(self.state['xml'])
         if self.state['xml'] != "":
             self.read_xml(self.state['xml'])
 
     def whoami_received(self, data):
-        self.label1.setText(str(data))
+        self.notification_item.setPlainText(str(data))
+        self.sid = str(data)
 
     def update_timer(self):
-        self.timer.update_time()
+        if self.sid == self.current_sid:
+            self.timer.update_time()
+        else:
+            self.restart_timer()
 
     def restart_timer(self):
         self.timer.time_left = 30000
@@ -348,11 +392,11 @@ class BoardOnline(QGraphicsScene):
         # przejdź do następnego gracza
         # for tile in self.my_tiles:
         #     self.removeItem(tile)
-        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(235, 235, 235))
+        #self.player_name_items[self.current_sid].setDefaultTextColor(QColor(235, 235, 235))
         #zapisanie ruchu do database
         self.save_to_db()
         # zmiana indeksu
-        self.current_player_index = (self.current_player_index + 1) % len(self.players)
+        #self.current_player_index = (self.current_player_index + 1) % len(self.players)
         # zapisanie do database stanu sprzed ruchu
         self.save_to_db()
         self.tiles_number_item.setPlainText("Tiles to draw: " + str(len(self.tiles)))
@@ -361,13 +405,19 @@ class BoardOnline(QGraphicsScene):
         #     tile.setPos(self.foreground_item.pos() + QPointF(
         #         (i % 20) * self.tile_width, int(i / 20) * self.tile_height))
         #     self.addItem(tile)
+        for i in range(3):
+            self.player_name_items[i].setPlainText(self.state['players'][i])
+        for i, sid in enumerate(self.state['sids']):
+            if sid == self.current_sid:
+                self.player_name_items[i].setDefaultTextColor(QColor(255, 100, 100))
 
-        self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
-        self.restart_timer()
         self.state['xml'] = self.create_xml()
         #self.state = self.create_xml()
-        print("xml: " + self.state['xml'])
-        self.socket.send_state(self.state['xml'])
+        #print("xml: " + self.state['xml'])
+        #self.socket.send_state(self.state['xml'])
+        #print(self.board)
+        self.socket.send_state(self.create_xml())
+        self.restart_timer()
 
     def make_move(self):
         if self.first_move:
@@ -642,7 +692,10 @@ class BoardOnline(QGraphicsScene):
         elif ind_y < 0:
             ind_y = -ind_y
         while self.board[ind_y, ind_x] is not None: #jak użytkownik chce położyć swój klocek na już istniejący, to zostaje on przestawiony w prawo
-            ind_x+=1
+            if ind_x < 23:
+                ind_x+=1
+            else:
+                ind_x-=1
         x = ind_x * self.tile_width
         y = ind_y * self.tile_height
         return QPointF(x, y)
@@ -654,6 +707,8 @@ class BoardOnline(QGraphicsScene):
             tiles = self.board[mask]
             for i, tile in enumerate(tiles):
                 tile.setPosFromIndices(mask[0][i],mask[1][i])
+                if tile not in self.board:
+                    self.addItem(tile)
 
     def possible_movements(self, tile):
         possible_moves = []

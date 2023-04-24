@@ -25,16 +25,16 @@ class Timer(QGraphicsItem):
         y = 100 + length * np.sin(np.radians(angle))
         painter.drawLine(QPointF(100, 100), QPointF(x, y))
         # rysowanie podziałki, można odkomentować jeżeli nie przeszkadza nam pętla
-        # painter.setPen(QPen(QColor(0, 0, 0), 3, Qt.SolidLine, Qt.RoundCap))
-        # painter.setRenderHint(QPainter.Antialiasing, True)
-        # #if self.time_left % 10 == 0:
-        # for i in range(0, 31):
-        #     angle = 135 + i * 9
-        #     x1 = 100 + 80 * np.cos(np.radians(angle))
-        #     y1 = 100 + 80 * np.sin(np.radians(angle))
-        #     x2 = 100 + 90 * np.cos(np.radians(angle))
-        #     y2 = 100 + 90 * np.sin(np.radians(angle))
-        #     painter.drawLine(QPointF(x1, y1), QPointF(x2, y2))
+        painter.setPen(QPen(QColor(0, 0, 0), 3, Qt.SolidLine, Qt.RoundCap))
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        #if self.time_left % 10 == 0:
+        for i in range(0, 31):
+            angle = 135 + i * 9
+            x1 = 100 + 80 * np.cos(np.radians(angle))
+            y1 = 100 + 80 * np.sin(np.radians(angle))
+            x2 = 100 + 90 * np.cos(np.radians(angle))
+            y2 = 100 + 90 * np.sin(np.radians(angle))
+            painter.drawLine(QPointF(x1, y1), QPointF(x2, y2))
         painter.setFont(self.font)
         painter.setPen(QPen(QColor(0, 0, 0), 4))
         painter.drawText(self.boundingRect(), Qt.AlignCenter, self.get_time_string())

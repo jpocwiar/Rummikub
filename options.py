@@ -257,7 +257,7 @@ class OptionsDialog(QDialog):
         elif self.ai_radio_button.isChecked():
             players = [Player(self.player1_line_edit.text() or "Player1"), Player("AI")]
         elif self.online_radio_button.isChecked():
-            players = [Player(self.player1_line_edit.text() or "Player1"), Player("Player2")]
+            players = [Player(self.player1_line_edit.text() or "Player1"), Player("Player2"), Player("Player3")]
 
         return players
 
