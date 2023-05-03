@@ -12,6 +12,8 @@ from desk import ForegroundItem
 from logger import Logger
 from options import OptionsDialog
 from database import DatabaseSQL, DatabaseXML
+from itertools import combinations
+import threading
 
 class Board(QGraphicsScene):
     def __init__(self, view, players, save_data = True, parent=None):
@@ -67,6 +69,11 @@ class Board(QGraphicsScene):
         self.sort_by_number_button.setGeometry(1600, 70, 120, 30)
         self.sort_by_number_button.clicked.connect(
         self.sort_tiles_by_number)
+
+        self.sort_by_number_button = QPushButton('Give tip', view)
+        self.sort_by_number_button.setGeometry(1600, 100, 120, 30)
+        self.sort_by_number_button.clicked.connect(
+            self.make_ai_move)
 
         self.logger = Logger(view)
         self.logger.setGeometry(1430, 870, 350, 100)
@@ -150,6 +157,8 @@ class Board(QGraphicsScene):
 
         self.player_name_items[self.current_player_index].setDefaultTextColor(QColor(255, 100, 100))
         self.restart_timer()
+        if self.players[self.current_player_index].is_ai:
+            self.make_ai_move()
 
     def make_move(self):
         if self.players[self.current_player_index].first_move:
@@ -263,8 +272,8 @@ class Board(QGraphicsScene):
                 non_joker = np.sum([not til.is_joker for til in group])
                 #print(non_joker)
                 if(non_joker <= 1):
-                    self.logger.log(str(self.players[self.current_player_index].name) + "- kombinacja z dominacją jokerów")
-                    #pass
+                    #self.logger.log(str(self.players[self.current_player_index].name) + "- kombinacja z dominacją jokerów")
+                    pass
                 else:
                     colors = set(str(til.colour) for til in group if not til.is_joker)
                     color_count = len(colors)
@@ -292,7 +301,6 @@ class Board(QGraphicsScene):
                             #     str(self.players[
                             #             self.current_player_index].name) + " - kombinacja tych samych cyfr")
                         else:
-                            #print("źle")
                             return False
                     else:
                         #print("źle")
@@ -408,6 +416,8 @@ class Board(QGraphicsScene):
             self.tiles = self.tiles[14:]
         self.current_player_index = 0
 
+
+
     def snap_to_grid(self, pos):
         # Obliczenie pozycji klocka na siatce
         ind_x = int(round(pos.x() / self.tile_width))
@@ -435,6 +445,108 @@ class Board(QGraphicsScene):
             tiles = self.board[mask]
             for i, tile in enumerate(tiles):
                 tile.setPosFromIndices(mask[0][i],mask[1][i])
+
+
+    def valid_groups(self, group):
+        non_joker = np.sum([not til.is_joker for til in group])
+        if (non_joker <= 1):
+            # self.logger.log(str(self.players[self.current_player_index].name) + "- kombinacja z dominacją jokerów")
+            pass
+        else:
+            colors = set(str(til.colour) for til in group if not til.is_joker)
+            color_count = len(colors)
+            # print("kolory: " + str(color_count))
+            if color_count == 1:
+                unique_values = set(til.numer - idx for idx, til in enumerate(group) if not til.is_joker)
+                if len(unique_values) == 1 and not unique_values == {0} and not next(iter(unique_values)) + len(
+                        group) - 1 >= 14:
+                    pass
+                else:
+                    return False
+            elif color_count == non_joker and len(group) <= 4:
+                values = set(til.numer for til in group if not til.is_joker)
+                if len(values) == 1:
+                    pass
+                else:
+                    return False
+            else:
+                return False
+        return True
+
+    def get_random_indices(self, board, len):
+        for i in range(100):
+            # Generate a random index within the bounds of the board
+            row, col = np.random.randint(0, 10), np.random.randint(0, 27)
+            # print(row)
+            # print(col)
+            for i in range(-1, len + 1):
+                if col + len + 1 < 27 and board[row, col + i] is None:
+                    return row, col
+        else:
+            return False
+
+    def make_ai_move(self):
+        placements = self.possible_placements()
+        moved = False
+        while len(placements) > 0:
+            indexx, indexy = self.get_random_indices(self.board,len(placements[0]))
+            for i, tile in enumerate(placements[0]):
+                self.players[self.current_player_index].tiles.remove(tile)
+                self.board[indexx, indexy + i] = tile
+                tile.setPosFromIndices(indexx, indexy + i)
+                moved = True
+            #row+=1
+            placements = self.possible_placements()
+        for tile in self.players[self.current_player_index].tiles:
+            moves = self.possible_movements(tile)
+            if len(moves) >0:
+                move = moves[0]
+                # print(move[1])
+                # print(move[0])
+                self.players[self.current_player_index].tiles.remove(tile)
+                self.board[move[0],move[1]] = tile
+
+                tile.setPosFromIndices(move[0],move[1])
+                moved = True
+        if moved:
+            prev_ind = self.current_player_index
+            self.make_move()
+            ind = self.current_player_index
+            if prev_ind == ind:
+                moved = False
+        if not moved:
+            self.draw_tile()
+
+
+
+
+
+    def possible_placements_thread(self):
+        thread = threading.Thread(target=self.possible_placements)
+        thread.start()
+
+
+    def possible_placements(self):
+        # self.sort_tiles_by_number()
+        # self.sort_tiles_by_color()
+        #self.check_move(board)
+        tiles = self.players[self.current_player_index].tiles
+        results = []
+        for i in range(3, 5):
+            for combination in combinations(tiles, i):
+                if self.valid_groups(list(combination)):
+                    results.append(list(combination))
+        #return results
+        #results.sort(key=lambda x: (-len(x), -max([tile.numer for tile in x if not tile.is_joker])))
+        if self.players[self.current_player_index].first_move:
+            results.sort(key=lambda x: (-len(x) * max([tile.numer for tile in x])))
+        else:
+            results.sort(key=lambda x: (-len(x), -max([tile.numer for tile in x if not tile.is_joker])))
+        # for combination in results:
+        #     for tile in combination:
+        #         print(tile.numer)
+        #     print("===================")
+        return results
 
     def possible_movements(self, tile):
         possible_moves = []

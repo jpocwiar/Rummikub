@@ -155,7 +155,7 @@ class BoardOnline(QGraphicsScene):
         self.addItem(self.tiles_number_item)
         self.tiles_number_item.setPos(1500, 810)
 
-        self.notification_item = QGraphicsTextItem("Czekanie na dołączenie użytkownika...")
+        self.notification_item = QGraphicsTextItem("Czekanie na rozpoczęcie gry...")
         self.notification_item.setFont(QFont("Arial", 16, QFont.Bold))
         self.notification_item.setDefaultTextColor(QColor(235, 235, 235))
         self.addItem(self.notification_item)
@@ -198,7 +198,7 @@ class BoardOnline(QGraphicsScene):
             self.addItem(tile)
         self.board_prev = self.board.copy()
         #print(self.board)
-        if self.beginning:
+        if self.beginning or True:
             self.my_tiles = []
             #me = root.findall("player")[0]
             me = root.findall("player")[self.my_index]
@@ -308,8 +308,10 @@ class BoardOnline(QGraphicsScene):
         return xml_string
 
     def clear(self):
+        self.board = np.full((15, 40), None, dtype=object)
         for item in self.items():
-            if isinstance(item, Tile) and item in self.board:
+            #if isinstance(item, Tile) and item not in self.my_tiles:
+            if isinstance(item, Tile):
                 self.removeItem(item)
 
     def send_message(self):
@@ -371,7 +373,7 @@ class BoardOnline(QGraphicsScene):
         self.sid = str(data)
 
     def update_timer(self):
-        if self.sid == self.current_sid:
+        if self.sid == self.current_sid and self.state['state'] == 'ONGOING':
             self.timer.update_time()
         else:
             self.restart_timer()
@@ -695,7 +697,7 @@ class BoardOnline(QGraphicsScene):
             if ind_x < 23:
                 ind_x+=1
             else:
-                ind_x-=1
+                ind_x=0
         x = ind_x * self.tile_width
         y = ind_y * self.tile_height
         return QPointF(x, y)

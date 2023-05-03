@@ -7,7 +7,8 @@ from PySide2.QtCore import QThread, Signal
 class SocketioThread(QThread):
 
     #ip = 'localhost'
-    ip = '192.168.178.200'
+    #ip = '192.168.178.200'
+    ip ='42.0.185.233'
     port = '50000'
     receive_state_signal = Signal(dict)
     whoami_signal = Signal(str)

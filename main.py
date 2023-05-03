@@ -45,7 +45,7 @@ if __name__ == '__main__':
         #board.set_ip_and_port(ip_and_port)
 
         view.setFixedSize(1810, 1020)
-        view.setWindowTitle("Rummikub - Jakub Poćwiardowski 184827")
+        view.setWindowTitle("Rummikub")
         icon = QIcon(":/joker/jok.png")
         view.setWindowIcon(icon)
         view.show()
