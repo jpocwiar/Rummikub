@@ -475,7 +475,6 @@ class Board(QGraphicsScene):
 
     def get_random_indices(self, board, len):
         for i in range(100):
-            # Generate a random index within the bounds of the board
             row, col = np.random.randint(0, 10), np.random.randint(0, 27)
             # print(row)
             # print(col)
@@ -500,7 +499,7 @@ class Board(QGraphicsScene):
         for tile in self.players[self.current_player_index].tiles:
             moves = self.possible_movements(tile)
             if len(moves) >0:
-                move = moves[0]
+                move = moves[np.random.randint(0, len(moves))]
                 # print(move[1])
                 # print(move[0])
                 self.players[self.current_player_index].tiles.remove(tile)
@@ -517,7 +516,12 @@ class Board(QGraphicsScene):
         if not moved:
             self.draw_tile()
 
-
+    def move_tile(self, index_a, index_b):
+        non_none_indices = np.where(self.board != None)
+        tile = self.board[index_a]
+        self.board[index_a] = None
+        self.board[index_b] = tile
+        tile.setPosFromIndices(index_b)
 
 
 
