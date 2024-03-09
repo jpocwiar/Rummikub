@@ -1,4 +1,7 @@
-# Instructions
+# Rummikub in Python
+![Screenshot](readme_images/zrrrr.png)
+
+## Basic instructions
 Bottom left corner: indication of the player who currently has a move
 - red color - the current player
 - white color - the rest of the players 
