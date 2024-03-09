@@ -1,81 +1,9 @@
-2023-05-03 16:40:40,741 - INFO - Pocz¹tek gry
-2023-05-03 16:40:42,591 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:42,688 - INFO - AI dobra³ klocek
-2023-05-03 16:40:42,750 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:42,837 - WARNING - [B£¥D] AI3 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 21. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
+2024-03-09 22:52:56,012 - INFO - Start of a game
+2024-03-09 22:53:12,757 - INFO - dads drew a tile
+2024-03-09 22:53:12,772 - WARNING - [B£¥D] AI laid his first combination with sum value of 3. First move requires tiles with sum of values >=30!
 
-2023-05-03 16:40:42,841 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:43,639 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:43,747 - INFO - AI dobra³ klocek
-2023-05-03 16:40:43,832 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:43,933 - WARNING - [B£¥D] AI3 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 21. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
+2024-03-09 22:53:12,772 - INFO - AI drew a tile
+2024-03-09 22:53:12,785 - INFO - AI2 laid a combination with sum value of 36
+2024-03-09 22:53:12,799 - WARNING - [B£¥D] AI3 laid his first combination with sum value of 12. First move requires tiles with sum of values >=30!
 
-2023-05-03 16:40:43,935 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:44,930 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:45,066 - INFO - AI po³o¿y³ kombinacjê o wartoœci 33
-2023-05-03 16:40:45,151 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:45,246 - WARNING - [B£¥D] AI3 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 21. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
-
-2023-05-03 16:40:45,248 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:46,257 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:46,358 - INFO - AI dobra³ klocek
-2023-05-03 16:40:46,447 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:46,583 - WARNING - [B£¥D] AI3 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 21. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
-
-2023-05-03 16:40:46,584 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:47,325 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:47,439 - INFO - AI dobra³ klocek
-2023-05-03 16:40:47,567 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:47,740 - WARNING - [B£¥D] AI3 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 21. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
-
-2023-05-03 16:40:47,742 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:48,459 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:48,590 - INFO - AI dobra³ klocek
-2023-05-03 16:40:48,787 - WARNING - [B£¥D] AI2 po³o¿y³ pierwsz¹ kombinacjê o wartoœci 27. Przy pierwszym ruchu konieczne jest wy³o¿enie klocków o ³¹cznej wartoœci >=30!
-
-2023-05-03 16:40:48,788 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:48,980 - INFO - AI3 po³o¿y³ kombinacjê o wartoœci 67
-2023-05-03 16:40:50,670 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:50,818 - INFO - AI dobra³ klocek
-2023-05-03 16:40:51,098 - WARNING - [B£¥D] AI2 nie wykona³ poprawnego pierwszego ruchu!
-
-2023-05-03 16:40:51,099 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:51,217 - INFO - AI3 wykona³ prawid³owy ruch i zosta³o mu 11 klocków
-2023-05-03 16:40:52,024 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:52,190 - INFO - AI dobra³ klocek
-2023-05-03 16:40:52,473 - INFO - AI2 po³o¿y³ kombinacjê o wartoœci 33
-2023-05-03 16:40:52,602 - INFO - AI3 wykona³ prawid³owy ruch i zosta³o mu 10 klocków
-2023-05-03 16:40:53,804 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:54,014 - INFO - AI dobra³ klocek
-2023-05-03 16:40:54,172 - INFO - AI2 wykona³ prawid³owy ruch i zosta³o mu 14 klocków
-2023-05-03 16:40:54,262 - INFO - AI3 wykona³ prawid³owy ruch i zosta³o mu 9 klocków
-2023-05-03 16:40:55,193 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:55,409 - INFO - AI dobra³ klocek
-2023-05-03 16:40:55,513 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:55,593 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:56,564 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:56,807 - INFO - AI wykona³ prawid³owy ruch i zosta³o mu 19 klocków
-2023-05-03 16:40:56,971 - INFO - AI2 wykona³ prawid³owy ruch i zosta³o mu 14 klocków
-2023-05-03 16:40:57,085 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:58,032 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:58,215 - INFO - AI dobra³ klocek
-2023-05-03 16:40:58,389 - INFO - AI2 dobra³ klocek
-2023-05-03 16:40:58,508 - INFO - AI3 dobra³ klocek
-2023-05-03 16:40:59,343 - INFO - Jakub dobra³ klocek
-2023-05-03 16:40:59,642 - INFO - AI wykona³ prawid³owy ruch i zosta³o mu 17 klocków
-2023-05-03 16:40:59,803 - INFO - AI2 wykona³ prawid³owy ruch i zosta³o mu 14 klocków
-2023-05-03 16:40:59,931 - INFO - AI3 dobra³ klocek
-2023-05-03 16:41:00,795 - INFO - Jakub dobra³ klocek
-2023-05-03 16:41:00,989 - INFO - AI dobra³ klocek
-2023-05-03 16:41:01,140 - INFO - AI2 dobra³ klocek
-2023-05-03 16:41:01,290 - INFO - AI3 dobra³ klocek
-2023-05-03 16:41:02,107 - INFO - Jakub dobra³ klocek
-2023-05-03 16:41:02,341 - INFO - AI dobra³ klocek
-2023-05-03 16:41:02,539 - INFO - AI2 dobra³ klocek
-2023-05-03 16:41:02,681 - WARNING - [B£¥D] AI3 - ruch nieprawid³owy!
-
-2023-05-03 16:41:02,683 - INFO - AI3 dobra³ klocek
-2023-05-03 16:41:03,588 - INFO - Jakub dobra³ klocek
-2023-05-03 16:41:03,856 - WARNING - [B£¥D] Nie mo¿na dobraæ wiêcej klocków! Koniec gry!
-
-2023-05-03 16:41:03,857 - INFO - Wygrywa AI3
+2024-03-09 22:53:12,799 - INFO - AI3 drew a tile

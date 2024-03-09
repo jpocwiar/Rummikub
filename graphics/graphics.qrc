@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="clock">
+    <file>graphics/clock.png</file>
+  </qresource>
+  <qresource prefix="backgr">
+    <file>wood3.jpg</file>
+  </qresource>
+  <qresource prefix="joker">
+    <file>jok.png</file>
+  </qresource>
+</RCC>

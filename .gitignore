@@ -1,5 +1,8 @@
 .idea/
-
+*.xml
+*.db
+*.log
+*.json
 # C extensions
 *.so
 OPENAI_API_KEY.txt
