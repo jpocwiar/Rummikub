@@ -1,9 +1,45 @@
-2024-03-09 22:52:56,012 - INFO - Start of a game
-2024-03-09 22:53:12,757 - INFO - dads drew a tile
-2024-03-09 22:53:12,772 - WARNING - [B£¥D] AI laid his first combination with sum value of 3. First move requires tiles with sum of values >=30!
+2024-03-09 23:18:46,369 - INFO - Start of a game
+2024-03-09 23:18:55,010 - INFO - dads laid a combination with sum value of 36
+2024-03-09 23:18:55,024 - INFO - AI laid a combination with sum value of 36
+2024-03-09 23:18:55,036 - INFO - AI2 drew a tile
+2024-03-09 23:18:55,048 - INFO - AI3 drew a tile
+2024-03-09 23:19:00,790 - INFO - dads drew a tile
+2024-03-09 23:19:00,802 - INFO - AI drew a tile
+2024-03-09 23:19:00,816 - INFO - AI2 drew a tile
+2024-03-09 23:19:00,832 - INFO - AI3 drew a tile
+2024-03-09 23:19:03,152 - INFO - dads drew a tile
+2024-03-09 23:19:03,164 - INFO - AI drew a tile
+2024-03-09 23:19:03,183 - INFO - AI2 drew a tile
+2024-03-09 23:19:03,201 - INFO - AI3 drew a tile
+2024-03-09 23:19:05,092 - INFO - dads drew a tile
+2024-03-09 23:19:05,109 - INFO - AI drew a tile
+2024-03-09 23:19:05,136 - WARNING - [B£¥D] AI2 laid his first combination with sum value of 27. First move requires tiles with sum of values >=30!
 
-2024-03-09 22:53:12,772 - INFO - AI drew a tile
-2024-03-09 22:53:12,785 - INFO - AI2 laid a combination with sum value of 36
-2024-03-09 22:53:12,799 - WARNING - [B£¥D] AI3 laid his first combination with sum value of 12. First move requires tiles with sum of values >=30!
+2024-03-09 23:19:05,136 - INFO - AI2 drew a tile
+2024-03-09 23:19:05,158 - INFO - AI3 drew a tile
+2024-03-09 23:19:13,542 - INFO - dads made a valid move and has 10 remaining tiles
+2024-03-09 23:19:13,596 - INFO - AI drew a tile
+2024-03-09 23:19:13,629 - WARNING - [B£¥D] AI2 laid his first combination with sum value of 27. First move requires tiles with sum of values >=30!
 
-2024-03-09 22:53:12,799 - INFO - AI3 drew a tile
+2024-03-09 23:19:13,629 - INFO - AI2 drew a tile
+2024-03-09 23:19:13,655 - INFO - AI3 drew a tile
+2024-03-09 23:19:27,178 - INFO - dads drew a tile
+2024-03-09 23:19:27,201 - INFO - AI drew a tile
+2024-03-09 23:19:27,240 - INFO - AI2 laid a combination with sum value of 33
+2024-03-09 23:19:27,280 - INFO - AI3 laid a combination with sum value of 33
+2024-03-09 23:19:57,300 - WARNING - [B£¥D] dads did not make a valid move and his time is out!
+
+2024-03-09 23:19:57,300 - INFO - dads drew a tile
+2024-03-09 23:19:57,326 - INFO - AI made a valid move and has 14 remaining tiles
+2024-03-09 23:19:57,350 - INFO - AI2 made a valid move and has 14 remaining tiles
+2024-03-09 23:19:57,375 - INFO - AI3 made a valid move and has 14 remaining tiles
+2024-03-09 23:20:27,395 - INFO - dads made a valid move and has 7 remaining tiles
+2024-03-09 23:20:27,421 - INFO - AI made a valid move and has 11 remaining tiles
+2024-03-09 23:20:27,444 - INFO - AI2 made a valid move and has 13 remaining tiles
+2024-03-09 23:20:27,468 - INFO - AI3 made a valid move and has 11 remaining tiles
+2024-03-09 23:20:57,490 - INFO - dads made a valid move and has 3 remaining tiles
+2024-03-09 23:20:57,518 - INFO - AI made a valid move and has 8 remaining tiles
+2024-03-09 23:20:57,543 - INFO - AI2 made a valid move and has 12 remaining tiles
+2024-03-09 23:20:57,567 - INFO - AI3 drew a tile
+2024-03-09 23:21:21,457 - INFO - dads made a valid move and has 0 remaining tiles
+2024-03-09 23:21:21,457 - INFO - The winner is dads!

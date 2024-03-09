@@ -1,27 +1,23 @@
-### Jakub Poćwiardowski 184827
-# Instrukcja
-Lewy dolny róg: wskazanie gracza, który aktualnie ma ruch
-- kolor czerwony - aktualny gracz
-- kolor biały - reszta graczy 
+# Instructions
+Bottom left corner: indication of the player who currently has a move
+- red color - the current player
+- white color - the rest of the players 
 
-Zasady Rummikuba są zachowane, więc przy pierwszym ruchu trzeba wyłożyć kafelki o łącznej wartości >= 30 (bez użycia kafelków obecnych na planszy). Warto to wziąć pod uwagę, gdyż czasami może się wydawać że sprawdzanie ruchu lub podświetlanie nie działa poprawnie, jednak wówczas najprawdopodobniej znaczy to że jest to nadal pierwszy ruch danego gracza.
+The rules of Rummikub are followed, so on the first move you have to set out tiles with a total value >= 30 (without using the tiles present on the board). This is worth taking into account, as sometimes it may seem that the move check or highlighting does not work correctly, but then it most likely means that it is still the first move of the player in question.
 
-Wykonane wszystko z podstawowych + logger
+## Functionality 
 
-- QGraphicsScene - klasa Board (plik main)
-- QGraphicsItem - klasa Tile (plik tile)
-- Drag and drop - funkcje mousePress, mouseRelease itd. na końcu klasy Board
-- Autosortowanie po kolorze i po liczbach - przyciski w prawym górnym rogu
-- Timer Analogowy - klasa timer
-- Podświetlanie możliwości ruchu - czerwony prostąkąt po kliknięciu klocka (przy 2+elementach w grupie na planszy)
-- Sprawdzanie poprawności ruchu - po kliknięciu przycisku accept move lub dobraniu klocka, bądź upływie czasu. W dwóch ostatnich przypadkach ruch zostaje cofnięty jeśli jest niepoprawny. W pierwszym wyświetlone zostaje ostrzeżenie w loggerze.
-- Grafiki zewnętrzne - plik graphics.qrc oraz skompilowany z niego graphics_rc.py
-- Dociąganie płytek do siatki - metoda snap_to_grid w klasie Board. Metoda uwzględnia również próby umieszczenia jednego klocka na drugim oraz wyniesienie go poza planszę
-- Multiselect realizowany jest poprzez kliknięcie myszką na puste pole i przeciągnięcie celem narysowania obszaru zaznaczenia. Przy przeciągnięciu któregoś z zaznaczonych klocków, przeciągnięte zostaną wszystkie zaznaczone klocki.
-- Logger - QTextEdit w prawym dolnym rogu + printowanie na ekran + do pliku logfile.log
-## Biblioteki
-- PySide2
-- Numpy
-- logging + standardowe
+- Drag and drop - Tiles can be dragged and are later snapped into grid. The method also takes into account attempts to place one tile on top of another or placing it outside the board
+- Highlighting movement possibilities - red rectangle after clicking a block (with 2+ elements in a group on the board)
+- Autosorting by color and by numbers - buttons in the upper right corner
+- Analog timer - shows remaining time
+- Checking the correctness of the move - happens after clicking the accept move button, drawing a tile, or after the time passes. In the latter two cases, the move is undone if it is incorrect. In the first, a warning is displayed in the logger.
+- Multiselect - holding left mouse button on empty space draws the selection area. When picking any of the selected blocks, all selected blocks will be dragged.
+- Logger - in the lower right corner + print to screen + to logfile.log file
+- Ability to play against AI - up to 4 players
+- Ability to play online - in one network
+- Loading previous configurations
+- Saving game history and ability to rewind it and jump into specific moment
+
 ### Python 3.8
 
